@@ -467,7 +467,8 @@ body {
   padding: 3px 6px; cursor: pointer; font-size: 11px;
 }
 .prod-item-accion.editar { border-color: var(--blue); color: var(--blue); }
-.prod-item-accion.eliminar { border-color: var(--red); color: var(--red); }
+.prod-item-accion.eliminar { border-color: var(--text-muted); color: var(--text-muted); }
+.prod-item-accion.borrar { border-color: var(--red); color: var(--red); font-weight: 700; }
 .prod-item.inactivo { opacity: 0.4; }
 
 /* VIEW: CIERRE */

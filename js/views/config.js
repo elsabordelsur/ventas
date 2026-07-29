@@ -106,6 +106,7 @@ async function cargarCategoriasAdmin() {
       </div>
       <button class="prod-item-accion editar" onclick="editarCategoria(${c.id})">✎</button>
       <button class="prod-item-accion eliminar" onclick="toggleCategoria(${c.id}, ${c.activa})">${c.activa ? 'Desactivar' : 'Activar'}</button>
+      <button class="prod-item-accion borrar" onclick="eliminarCategoria(${c.id})">✕</button>
     </div>`
   ).join('')
 }
@@ -139,6 +140,15 @@ function editarCategoria(id) {
 async function toggleCategoria(id, activa) {
   await supabase.from('categorias').update({ activa: !activa }).eq('id', id)
   await cargarCategoriasAdmin()
+}
+
+async function eliminarCategoria(id) {
+  if (!confirm('¿Eliminar esta categoría? Los productos asociados se quedarán sin categoría.')) return
+  const { error } = await supabase.from('categorias').delete().eq('id', id)
+  if (error) { alert('Error: ' + error.message); return }
+  await cargarCategoriasAdmin()
+  await cargarCategoriasSelect()
+  await cargarProductosAdmin()
 }
 
 async function cargarProductosAdmin() {
