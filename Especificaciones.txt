@@ -1,0 +1,91 @@
+Actúa como un Arquitecto de Software Senior y Desarrollador Full-Stack experto en aplicaciones web ligeras, Supabase (PostgreSQL, RLS) y sistemas POS/Facturación para pequeños negocios de comida rápida en Venezuela.
+
+Necesito que diseñes y programes el código fuente completo para una Web App PWA (Progressive Web App) de Facturación y Caja Rápida que funcione de manera extremadamente fluida en cualquier navegador moderno (Chrome, Firefox, Safari, Edge) y dispositivos móviles/terminales modestas.
+
+---
+
+### 1. RESTRICCIONES DE RENDIMIENTO Y ARQUITECTURA (Bajo consumo de RAM)
+- Stack Técnico Obligatorio: HTML5 semántico, CSS3 puro (o Tailwind via CDN ligero/CSS compilado sin minificadores pesados en tiempo de ejecución) y JavaScript Vanilla (ES6+) estructurado en módulos o una librería ultraligera como Alpine.js.
+- NO USAR: Frameworks pesados como React, Next.js, Angular, ni Bundlers complejos (Vite, Webpack) si no son estrictamente necesarios para GitHub Pages.
+- Persistencia y Backend: Supabase (vía @supabase/supabase-js desde CDN / SDK modular).
+- Despliegue Target: GitHub Pages (aplicación estática cliente-servidor).
+- Cache & Offline First básico: Service Worker ligero para almacenamiento en caché de assets estáticos e indexedDB/LocalStorage para contingencias breves de red.
+
+---
+
+### 2. LÓGICA DE NEGOCIO Y PRICING DUAL (Reglas para Venezuela)
+La aplicación debe implementar exactamente la siguiente lógica de cobro:
+
+1. Moneda Base: Dólares ($ USD).
+2. Tasa de Cambio: Administrada dinámicamente desde la base de datos (Tasa BCV del día en $ Bs./USD).
+3. Dual Pricing y Redondeo Escalonado por Denominación en Efectivo (Aplica sobre el TOTAL del Ticket, NO por ítem):
+   - Monto Base Exacto: $Total\_Bs = Total\_USD \times Tasa\_BCV$.
+   - Canal Electrónico (PagoMóvil, Punto de Venta, Transferencia):
+     - Sin ajuste de redondeo. Se cobra el monto exacto flotante.
+   - Canal Efectivo en Bolívares (Bs.):
+     - Evaluación del residuo de la centena ($Residuo = Total\_Bs \pmod{100}$):
+       * *Condición 1 (Centena Exacta):* Si $Residuo == 0$, no hay ajuste.
+       * *Condición 2 (Tramo Bajo):* Si $0 < Residuo \le 50$, el total sube a la mitad de la centena actual ($X50\text{ Bs.}$).
+       * *Condición 3 (Tramo Alto):* Si $Residuo > 50$, el total sube a la siguiente centena completa ($(X+1)00\text{ Bs.}$).
+4. Cálculo de Vueltos en Pagos Combinados / Mixtos:
+   - Métodos soportados: USD_Efectivo, Bs_Efectivo, PagoMovil, Punto_De_Venta.
+   - Si el cliente paga en USD en efectivo con una denominación superior al total en USD, el vuelto sobrante se calcula y entrega obligatoriamente en Bolívares (Bs.) al tipo de cambio BCV del día.
+5. Registro de Auditoría de Redondeo:
+   - Toda transacción en efectivo debe almacenar la variable Ajuste_Redondeo_Bs ($Monto\_Cobrado - Monto\_Exacto$) para evitar descuadres en el Cierre Z de Caja.
+
+---
+
+### 3. ESTRUCTURA DE LA BASE DE DATOS (Supabase / PostgreSQL)
+Genera el script SQL de migración listo para ejecutar en el Editor SQL de Supabase, incluyendo:
+
+1. configuracion: id, tasa_bcv, fecha_actualizacion, created_at.
+2. categorias: id, nombre, activa.
+3. productos: id, categoria_id, nombre, precio_usd, activo, created_at.
+4. ventas: 
+   - id (UUID)
+   - fecha_hora (TIMESTAMP WITH TIME ZONE)
+   - total_usd (NUMERIC)
+   - tasa_bcv_aplicada (NUMERIC)
+   - total_bs_teorico (NUMERIC)
+   - total_bs_cobrado (NUMERIC)
+   - pago_usd_efectivo (NUMERIC)
+   - pago_bs_efectivo (NUMERIC)
+   - pago_pagomovil (NUMERIC)
+   - pago_punto (NUMERIC)
+   - vuelto_bs_entregado (NUMERIC)
+   - ajuste_redondeo_bs (NUMERIC)
+   - usuario_id (FK a auth.users o identificador de caja)
+5. venta_detalles: id, venta_id, producto_id, cantidad, precio_unitario_usd, subtotal_usd.
+6. Políticas de Seguridad (RLS - Row Level Security) básicas habilitadas para lectura/escritura del personal autorizado.
+
+---
+### 4. REQUERIMIENTOS DE LA INTERFAZ DE USUARIO (UI/UX - RÁPIDA Y REACTIVA)
+La interfaz debe dividirse en 3 vistas/módulos principales dentro de la SPA:
+
+#### A. Pantalla de Caja Rápida / POS (/caja)
+- Panel Izquierdo / Catálogo Grid: Botones táctiles de productos agrupados por categorías (Empanadas, Pastelitos, Bebidas), filtrado inmediato sin latencia.
+- Panel Derecho / Ticket Actual: 
+  - Lista de ítems agregados con controles de (+ / - / eliminar) y cantidades.
+  - Indicadores dinámicos e instantáneos de Totales:
+    * Total USD ($)
+    * Total Bs. Digital (Exacto)
+    * Total Bs. Efectivo (Redondeado a tramos de 50 Bs.)
+- Modal de Checkout / Cobro Combinado:
+  - Desglose dinámico de métodos de pago (Efectivo USD, Efectivo Bs, PagoMóvil, Punto).
+  - Input listeners en tiempo real que calculen automáticamente si hay Faltante o Vuelto a entregar en Bs.
+  - Botón grande "PROCESAR VENTA" que guarda en Supabase, emite la transacción y limpia la caja en menos de 300ms.
+
+#### B. Módulo de Ajustes (/config)
+- Campo interactivo para actualizar la Tasa BCV del día.
+
+#### C. Módulo de Cierre y Cuadre de Caja (/cierre)
+- Resumen del día: Total de Ventas en USD, Total cobrado por canal (Efectivo $, Efectivo Bs, PagoMóvil, Punto), Suma total de Vueltos en Bs. entregados, y Total acumulado en la cuenta de Ajustes por Redondeo.
+
+---
+
+### 5. ENTREGABLES REQUERIDOS
+1. Script SQL completo para Supabase: Tablas, RLS y triggers de fecha si aplican.
+2. Código completo de la aplicación (HTML, CSS y JavaScript):
+   - Puede presentarse como una estructura limpia modular (index.html, app.js, supabaseClient.js, pricingEngine.js) o como un archivo SPA autocontenido optimizado.
+   - Muestra la implementación matemática exacta del redondeo en el módulo pricingEngine.js.
+3. Guía de Despliegue en GitHub Pages: Instrucciones paso a paso para configurar las variables de entorno de Supabase (SUPABASE_URL y SUPABASE_ANON_KEY) sin exponer llaves privadas.
