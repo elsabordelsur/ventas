@@ -65,10 +65,16 @@ async function obtenerTasaBCV() {
   } catch {}
 
   try {
-    const res = await fetch('https://ve.dolarapi.com/v1/tasa/BCV')
+    const res = await fetch('https://bcv.today/api/v1/rate.json')
     const data = await res.json()
-    const tasa = +(data.tasa || 0)
-    if (tasa && tasa > 0) { ponerTasa(tasa) } else { throw new Error() }
+    const tasa = +(data.USD || 0)
+    if (tasa && tasa > 0) { ponerTasa(tasa); btn.textContent = 'Obtener automáticamente'; btn.disabled = false; return } else { throw new Error() }
+  } catch {}
+  try {
+    const res = await fetch('https://pydolarve.com/api/dolar?moneda=usd')
+    const data = await res.json()
+    const tasa = +(data.bcv || 0)
+    if (tasa && tasa > 0) { ponerTasa(tasa); btn.textContent = 'Obtener automáticamente'; btn.disabled = false; return } else { throw new Error() }
   } catch {
     document.getElementById('configStatus').textContent = '❌ No se pudo obtener la tasa automáticamente'
     document.getElementById('configStatus').style.color = 'var(--danger)'

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'esds-cache-v2'
+const CACHE_NAME = 'esds-cache-v3'
 const ASSETS = ['/', '/index.html', '/css/style.css', '/manifest.json']
 
 self.addEventListener('install', e => {

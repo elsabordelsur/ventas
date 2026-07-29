@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+async function test() {
+  const out = document.getElementById('out')
+  function log(m) { out.innerHTML += m + '<br>' }
+  log('supabase disponible: ' + (typeof window.supabase !== 'undefined'))
+  if (!window.supabase) { log('ERROR: supabase no cargado'); return }
+  const supabase = window.supabase.createClient(
+    'https://putmambqopgifxnhervv.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dG1hbWJxb3BnaWZ4bmhlcnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzMTA0NDEsImV4cCI6MjEwMDg4NjQ0MX0.SsdwPlwc4vKx0HzlpOo8UGt7j7l8ZO9RER0BMVQIxX4',
+    { auth: { persistSession: false } }
+  )
+  try {
+    const { data, error } = await supabase.from('categorias').select('*').limit(1)
+    if (error) { log('ERROR DB: ' + error.message) }
+    else { log('DB OK: ' + JSON.stringify(data)) }
+  } catch(e) { log('EXCEPTION: ' + e.message) }
+
+  try {
+    const r = await supabase.from('categorias').insert({ nombre: 'TestDiag' }).select()
+    log('INSERT: ' + JSON.stringify(r))
+  } catch(e) { log('INSERT EXCEPTION: ' + e.message) }
+}
+test()
+</script>
+<h3>Diagnóstico Supabase</h3>
+<div id="out"></div>
+</body></html>
