@@ -25,6 +25,18 @@ if ('serviceWorker' in navigator) {
   })
 }
 
+function toggleMenu() {
+  const d = document.getElementById('menuDropdown')
+  d.style.display = d.style.display === 'none' ? 'block' : 'none'
+}
+
+document.addEventListener('click', e => {
+  const d = document.getElementById('menuDropdown')
+  if (d.style.display === 'block' && !e.target.closest('#topnav') && !e.target.closest('#menuDropdown')) {
+    d.style.display = 'none'
+  }
+})
+
 document.addEventListener('DOMContentLoaded', () => {
   navigate('caja')
 })
