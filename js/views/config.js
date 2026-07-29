@@ -164,6 +164,8 @@ async function cargarProductosAdmin() {
     return
   }
 
+  const editSvg = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 1.5l2.5 2.5L4.5 12H2v-2.5L10 1.5z"/></svg>'
+  const delSvg = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>'
   container.innerHTML = data.map(p =>
     `<div class="prod-item${p.activo ? '' : ' inactivo'}">
       <div class="prod-item-info">
@@ -171,8 +173,8 @@ async function cargarProductosAdmin() {
         <div class="prod-item-categoria">${p.categorias?.nombre || 'Sin categoría'}</div>
       </div>
       <div class="prod-item-precio">$${p.precio_usd.toFixed(2)}</div>
-      <button class="prod-item-accion editar" onclick="editarProducto(${p.id})">✎</button>
-      <button class="prod-item-accion eliminar" onclick="eliminarProducto(${p.id})">✕</button>
+      <button class="prod-item-accion editar" onclick="editarProducto(${p.id})">${editSvg}</button>
+      <button class="prod-item-accion eliminar" onclick="eliminarProducto(${p.id})">${delSvg}</button>
     </div>`
   ).join('')
 }

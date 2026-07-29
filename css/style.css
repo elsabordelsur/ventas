@@ -74,7 +74,9 @@ body {
   color: var(--nav-active);
   letter-spacing: 1px;
   font-family: var(--font-mono);
+  cursor: pointer;
 }
+.nav-title:active { opacity: .7; }
 
 /* MENU DROPDOWN */
 .menu-overlay {
@@ -200,10 +202,12 @@ body {
 .producto-btn:active { background: var(--nav-bg); border-color: var(--nav-bg); }
 .producto-btn:active .producto-nombre { color: #fff; }
 .producto-btn:active .producto-precio { color: #fff; }
+.producto-btn:active .producto-precio-bs { color: rgba(255,255,255,0.6); }
 .producto-btn:active .producto-stock { color: rgba(255,255,255,0.7); }
 
-.producto-nombre { font-size: 13px; font-weight: 600; text-align: center; color: var(--text); }
-.producto-precio { font-size: 15px; color: var(--green); font-weight: 700; margin-top: 5px; font-family: var(--font-mono); }
+.producto-nombre { font-size: 13px; font-weight: 600; text-align: center; color: var(--text); margin-top: 4px; }
+.producto-precio-bs { font-size: 13px; color: var(--text-muted); font-weight: 600; font-family: var(--font-mono); }
+.producto-precio { font-size: 15px; color: var(--green); font-weight: 700; font-family: var(--font-mono); }
 
 /* TICKET */
 .ticket-header {
@@ -257,13 +261,11 @@ body {
 .ticket-item-precio { font-size: 11px; color: var(--green); font-family: var(--font-mono); }
 .ticket-item-cantidad { display: flex; align-items: center; gap: 4px; }
 .ticket-item-cantidad button {
-  width: 26px; height: 26px;
+  width: 28px; height: 28px;
   border: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -272,9 +274,10 @@ body {
 .ticket-item-cantidad span { font-size: 14px; font-weight: 600; min-width: 20px; text-align: center; font-family: var(--font-mono); }
 .ticket-item-subtotal { font-size: 12px; color: var(--text-muted); min-width: 55px; text-align: right; font-family: var(--font-mono); font-weight: 600; }
 .ticket-item-remove {
-  background: none; border: none; color: var(--red);
-  cursor: pointer; font-size: 16px; padding: 4px;
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;
 }
+.ticket-item-remove:active { color: var(--red); }
 
 .ticket-totales {
   padding: 10px 14px;
@@ -309,7 +312,7 @@ body {
 .cant-btn {
   width: 48px; height: 48px; border: 1px solid var(--border);
   background: var(--bg-card2); color: var(--text);
-  font-size: 24px; font-weight: 700; cursor: pointer;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .cant-btn:active { background: var(--nav-bg); color: #fff; }
 .cant-input {
@@ -368,20 +371,52 @@ body {
 .resumen-line { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; }
 .resumen-line span:last-child { font-family: var(--font-mono); }
 
-.pago-metodos { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.pago-metodos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
 
-.pago-grupo { display: flex; align-items: center; gap: 10px; }
+.pago-metodo-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all .1s;
+}
+.pago-metodo-btn:active { background: var(--nav-bg); color: #fff; border-color: var(--nav-bg); }
+.pago-metodo-btn.selected { background: var(--nav-bg); color: #fff; border-color: var(--nav-bg); }
 
-.pago-grupo label { min-width: 120px; font-size: 12px; color: var(--text-muted); }
+.pago-monto { margin-bottom: 14px; }
+.pago-monto-label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.pago-monto-row { display: flex; align-items: center; gap: 8px; }
+.pago-monto-moneda { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-mono); }
+
+.pago-acciones { display: flex; gap: 8px; }
+.pago-acciones .btn-procesar { flex: 1; }
+
+.btn-cancelar-pago {
+  padding: 16px 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-cancelar-pago:active { background: var(--bg); }
 
 .pago-input {
   flex: 1;
-  padding: 8px 10px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
   background: var(--bg-input);
   color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   font-family: var(--font-mono);
   outline: none;
 }

@@ -43,13 +43,15 @@ function renderProductos(lista) {
     grid.innerHTML = '<div class="ticket-empty">Sin productos en esta categoría</div>'
     return
   }
-  grid.innerHTML = lista.map(p =>
-    `<button class="producto-btn" onclick="abrirModalCantidad(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})">
-      <span class="producto-nombre">${p.nombre}</span>
+  grid.innerHTML = lista.map(p => {
+    const bsPrice = (p.precio_usd * tasaBcvActual).toFixed(2)
+    return `<button class="producto-btn" onclick="abrirModalCantidad(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})">
+      <span class="producto-precio-bs">Bs. ${bsPrice}</span>
       <span class="producto-precio">$${p.precio_usd.toFixed(2)}</span>
+      <span class="producto-nombre">${p.nombre}</span>
       ${p.maneja_inventario ? `<span class="producto-stock">Stock: ${p.stock}</span>` : ''}
     </button>`
-  ).join('')
+  }).join('')
 }
 
 function agregarAlTicket(id, nombre, precio) {
@@ -81,12 +83,12 @@ function renderTicket() {
         <div class="ticket-item-precio">$${t.precio.toFixed(2)}</div>
       </div>
       <div class="ticket-item-cantidad">
-        <button onclick="cambiarCantidad(${i}, -1)">−</button>
+        <button onclick="cambiarCantidad(${i}, -1)"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="7" x2="11" y2="7"/></svg></button>
         <span>${t.cantidad}</span>
-        <button onclick="cambiarCantidad(${i}, 1)">+</button>
+        <button onclick="cambiarCantidad(${i}, 1)"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="7" x2="11" y2="7"/><line x1="7" y1="3" x2="7" y2="11"/></svg></button>
       </div>
       <div class="ticket-item-subtotal">$${(t.precio * t.cantidad).toFixed(2)}</div>
-      <button class="ticket-item-remove" onclick="eliminarDelTicket(${i})">✕</button>
+      <button class="ticket-item-remove" onclick="eliminarDelTicket(${i})"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg></button>
     </div>`
   ).join('')
 
@@ -114,42 +116,87 @@ function actualizarTotales() {
   document.getElementById('totalBsEfectivo').textContent = `Bs. ${totalBsEfectivo.toFixed(2)}`
 }
 
+let checkoutMetodo = ''
+
 function abrirCheckout() {
   if (ticket.length === 0) return
   const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
   document.getElementById('checkTotalUsd').textContent = `$${totalUsd.toFixed(2)}`
   document.getElementById('checkTotalBsExacto').textContent = `Bs. ${calcularTotalBs(totalUsd, tasaBcvActual).toFixed(2)}`
-  document.getElementById('checkTotalBsEfectivo').textContent = `Bs. ${techo50(calcularTotalBs(totalUsd, tasaBcvActual))}`
 
-  document.getElementById('pagoUsd').value = '0'
-  document.getElementById('pagoBs').value = '0'
-  document.getElementById('pagoPagoMovil').value = '0'
-  document.getElementById('pagoPunto').value = '0'
-  document.getElementById('checkBilletes').innerHTML = ''
-
+  document.getElementById('checkoutStepMetodo').style.display = 'block'
+  document.getElementById('checkoutStepMonto').style.display = 'none'
   document.getElementById('modalCheckout').style.display = 'flex'
-  calcularCheckoutUI()
+  checkoutMetodo = ''
+  document.querySelectorAll('.pago-metodo-btn').forEach(b => b.classList.remove('selected'))
 }
 
 function cerrarCheckout() {
   document.getElementById('modalCheckout').style.display = 'none'
 }
 
+function seleccionarMetodo(metodo) {
+  checkoutMetodo = metodo
+  document.querySelectorAll('.pago-metodo-btn').forEach(b => b.classList.remove('selected'))
+  document.getElementById(`metodo${metodo.charAt(0).toUpperCase() + metodo.slice(1)}`).classList.add('selected')
+
+  const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
+  const totalBs = calcularTotalBs(totalUsd, tasaBcvActual)
+
+  let label, moneda, step
+  if (metodo === 'usd') {
+    label = '¿Con cuántos USD paga?'; moneda = '$'; step = 0.01
+  } else if (metodo === 'bs') {
+    label = '¿Con cuántos Bs. paga?'; moneda = 'Bs.'; step = 50
+  } else {
+    label = 'Confirmar pago'; moneda = 'Bs.'; step = 0.01
+  }
+
+  document.getElementById('pagoMontoLabel').textContent = label
+  document.getElementById('pagoMontoMoneda').textContent = moneda
+  const input = document.getElementById('pagoMontoInput')
+  input.step = step
+  input.min = '0'
+  input.value = (metodo === 'pagomovil' || metodo === 'punto') ? totalBs.toFixed(2) : '0'
+  document.getElementById('checkBilletes').innerHTML = ''
+
+  document.getElementById('checkoutStepMetodo').style.display = 'none'
+  document.getElementById('checkoutStepMonto').style.display = 'block'
+
+  if (metodo !== 'pagomovil' && metodo !== 'punto') {
+    calcularCheckoutUI()
+  } else {
+    document.getElementById('checkFaltante').textContent = 'Monto exacto'
+    document.getElementById('checkFaltante').style.color = 'var(--success)'
+    document.getElementById('checkVuelto').textContent = 'Vuelto: Bs. 0.00'
+    document.getElementById('checkRedondeo').textContent = ''
+    document.getElementById('checkBilletes').innerHTML = ''
+    const btn = document.getElementById('btnProcesar')
+    btn.disabled = false
+    btn.style.opacity = '1'
+  }
+}
+
+function volverMetodos() {
+  document.getElementById('checkoutStepMonto').style.display = 'none'
+  document.getElementById('checkoutStepMetodo').style.display = 'block'
+  checkoutMetodo = ''
+  document.querySelectorAll('.pago-metodo-btn').forEach(b => b.classList.remove('selected'))
+}
+
 function calcularCheckoutUI() {
   const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
-  const pagos = {
-    usd: +document.getElementById('pagoUsd').value || 0,
-    bs: +document.getElementById('pagoBs').value || 0,
-    pagoMovil: +document.getElementById('pagoPagoMovil').value || 0,
-    punto: +document.getElementById('pagoPunto').value || 0
-  }
+  const monto = +document.getElementById('pagoMontoInput').value || 0
+
+  let pagos = { usd: 0, bs: 0, pagoMovil: 0, punto: 0 }
+  pagos[checkoutMetodo === 'pagomovil' ? 'pagoMovil' : checkoutMetodo === 'punto' ? 'punto' : checkoutMetodo] = monto
 
   const result = calcularCheckout(totalUsd, tasaBcvActual, tasaVueltoActual, pagos)
 
   document.getElementById('checkFaltante').textContent = `Faltante: Bs. ${result.faltante.toFixed(2)}`
   document.getElementById('checkFaltante').style.color = result.faltante > 0 ? 'var(--danger)' : 'var(--success)'
   document.getElementById('checkVuelto').textContent = `Vuelto Bs.: Bs. ${result.vueltoBs.toFixed(2)}`
-  document.getElementById('checkRedondeo').textContent = `Ajuste redondeo: Bs. ${result.ajusteRedondeo.toFixed(2)}`
+  document.getElementById('checkRedondeo').textContent = result.ajusteRedondeo ? `Ajuste redondeo: Bs. ${result.ajusteRedondeo.toFixed(2)}` : ''
 
   if (result.vueltoBilletes && result.vueltoBilletes.length > 0) {
     document.getElementById('checkBilletes').innerHTML = '<div class="billetes-title">Billetes a entregar:</div>' +
@@ -170,12 +217,10 @@ async function procesarVenta() {
   btn.disabled = true
 
   const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
-  const pagos = {
-    usd: +document.getElementById('pagoUsd').value || 0,
-    bs: +document.getElementById('pagoBs').value || 0,
-    pagoMovil: +document.getElementById('pagoPagoMovil').value || 0,
-    punto: +document.getElementById('pagoPunto').value || 0
-  }
+  const monto = +document.getElementById('pagoMontoInput').value || 0
+
+  let pagos = { usd: 0, bs: 0, pagoMovil: 0, punto: 0 }
+  pagos[checkoutMetodo === 'pagomovil' ? 'pagoMovil' : checkoutMetodo === 'punto' ? 'punto' : checkoutMetodo] = monto
 
   const result = calcularCheckout(totalUsd, tasaBcvActual, tasaVueltoActual, pagos)
 
@@ -194,7 +239,7 @@ async function procesarVenta() {
 
   if (error) {
     alert('Error al procesar venta: ' + error.message)
-    btn.textContent = 'PROCESAR VENTA'
+    btn.textContent = 'CONFIRMAR'
     btn.disabled = false
     return
   }
@@ -220,7 +265,7 @@ async function procesarVenta() {
   ticket = []
   renderTicket()
   cerrarCheckout()
-  btn.textContent = 'PROCESAR VENTA'
+  btn.textContent = 'CONFIRMAR'
 }
 
 let modalCantProd = null
