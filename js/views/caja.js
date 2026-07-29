@@ -143,13 +143,13 @@ function seleccionarMetodo(metodo) {
   const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
   const totalBs = calcularTotalBs(totalUsd, tasaBcvActual)
 
-  let label, moneda, step
+  let label, moneda, step, valorInicial
   if (metodo === 'usd') {
-    label = '¿Con cuántos USD paga?'; moneda = '$'; step = 0.01
+    label = '¿Con cuántos USD paga?'; moneda = '$'; step = 0.01; valorInicial = '0'
   } else if (metodo === 'bs') {
-    label = '¿Con cuántos Bs. paga?'; moneda = 'Bs.'; step = 50
+    label = `Total con redondeo: Bs. ${techo50(totalBs)}`; moneda = 'Bs.'; step = 50; valorInicial = techo50(totalBs).toString()
   } else {
-    label = 'Confirmar pago'; moneda = 'Bs.'; step = 0.01
+    label = 'Confirmar pago'; moneda = 'Bs.'; step = 0.01; valorInicial = totalBs.toFixed(2)
   }
 
   document.getElementById('pagoMontoLabel').textContent = label
@@ -157,7 +157,7 @@ function seleccionarMetodo(metodo) {
   const input = document.getElementById('pagoMontoInput')
   input.step = step
   input.min = '0'
-  input.value = (metodo === 'pagomovil' || metodo === 'punto') ? totalBs.toFixed(2) : '0'
+  input.value = valorInicial
   document.getElementById('checkBilletes').innerHTML = ''
 
   const btnExacto = document.getElementById('btnExacto')
