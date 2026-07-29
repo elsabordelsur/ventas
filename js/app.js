@@ -2,12 +2,20 @@ window.addEventListener('error', e => {
   console.error('GLOBAL:', e.message, e.filename, e.lineno)
 })
 
+function toggleMenu(force) {
+  const d = document.getElementById('menuDropdown')
+  const o = document.getElementById('menuOverlay')
+  if (force === false) {
+    d.classList.remove('active'); o.classList.remove('active')
+  } else {
+    d.classList.toggle('active'); o.classList.toggle('active')
+  }
+}
+
 function navigate(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
-
   document.getElementById(`view-${view}`).classList.add('active')
-  document.querySelector(`.nav-btn[data-view="${view}"]`).classList.add('active')
+  toggleMenu(false)
 
   if (view === 'caja') {
     Promise.all([cargarTasa(), cargarCategorias()]).then(() =>
@@ -29,13 +37,6 @@ function toggleMenu() {
   const d = document.getElementById('menuDropdown')
   d.style.display = d.style.display === 'none' ? 'block' : 'none'
 }
-
-document.addEventListener('click', e => {
-  const d = document.getElementById('menuDropdown')
-  if (d.style.display === 'block' && !e.target.closest('#topnav') && !e.target.closest('#menuDropdown')) {
-    d.style.display = 'none'
-  }
-})
 
 document.addEventListener('DOMContentLoaded', () => {
   navigate('caja')
