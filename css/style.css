@@ -394,7 +394,10 @@ body {
 .config-status { margin-top: 8px; font-size: 13px; color: var(--success); }
 
 /* PRODUCT FORM */
-.prod-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.prod-form { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+
+.prod-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.prod-label:first-of-type { margin-top: 0; }
 
 .prod-input {
   padding: 10px 12px;
