@@ -44,7 +44,7 @@ function renderProductos(lista) {
     return
   }
   grid.innerHTML = lista.map(p =>
-    `<button class="producto-btn" onclick="agregarAlTicket(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})">
+    `<button class="producto-btn" onclick="abrirModalCantidad(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})">
       <span class="producto-nombre">${p.nombre}</span>
       <span class="producto-precio">$${p.precio_usd.toFixed(2)}</span>
       ${p.maneja_inventario ? `<span class="producto-stock">Stock: ${p.stock}</span>` : ''}
@@ -221,4 +221,32 @@ async function procesarVenta() {
   renderTicket()
   cerrarCheckout()
   btn.textContent = 'PROCESAR VENTA'
+}
+
+let modalCantProd = null
+
+function abrirModalCantidad(id, nombre, precio) {
+  modalCantProd = { id, nombre, precio }
+  document.getElementById('modalCantProd').textContent = nombre
+  document.getElementById('cantInput').value = 1
+  document.getElementById('modalCantidad').style.display = 'flex'
+}
+
+function cerrarModalCantidad() {
+  document.getElementById('modalCantidad').style.display = 'none'
+  modalCantProd = null
+}
+
+function cambiarCantModal(delta) {
+  const input = document.getElementById('cantInput')
+  input.value = Math.max(1, (+input.value || 1) + delta)
+}
+
+function confirmarCantidad() {
+  if (!modalCantProd) return
+  const cantidad = +document.getElementById('cantInput').value || 1
+  for (let i = 0; i < cantidad; i++) {
+    agregarAlTicket(modalCantProd.id, modalCantProd.nombre, modalCantProd.precio)
+  }
+  cerrarModalCantidad()
 }

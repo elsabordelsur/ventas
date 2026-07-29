@@ -246,6 +246,22 @@ body {
 
 .btn-cobrar:active { background: #15803d; }
 
+/* MODAL CANTIDAD */
+.modal-cantidad { max-width: 320px; text-align: center; }
+.modal-cantidad h2 { font-size: 18px; margin-bottom: 20px; color: var(--text); }
+.cant-control { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; }
+.cant-btn {
+  width: 48px; height: 48px; border: 1px solid var(--border);
+  background: var(--bg-card2); color: var(--text);
+  font-size: 24px; font-weight: 700; cursor: pointer;
+}
+.cant-btn:active { background: var(--nav-bg); color: #fff; }
+.cant-input {
+  width: 100px; height: 48px; text-align: center;
+  border: 1px solid var(--border); background: var(--bg-input); color: var(--text);
+  font-size: 24px; font-weight: 700; font-family: var(--font-mono); outline: none;
+}
+
 /* MODAL CHECKOUT */
 .modal-overlay {
   position: fixed;

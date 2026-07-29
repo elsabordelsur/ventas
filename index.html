@@ -53,6 +53,20 @@
       </div>
     </div>
 
+    <!-- MODAL CANTIDAD -->
+    <div id="modalCantidad" class="modal-overlay" style="display:none">
+      <div class="modal-content modal-cantidad">
+        <button class="modal-close" onclick="cerrarModalCantidad()">✕</button>
+        <h2 id="modalCantProd">Producto</h2>
+        <div class="cant-control">
+          <button class="cant-btn" onclick="cambiarCantModal(-1)">−</button>
+          <input type="number" id="cantInput" class="cant-input" value="1" min="1" step="1">
+          <button class="cant-btn" onclick="cambiarCantModal(1)">+</button>
+        </div>
+        <button class="btn-procesar" onclick="confirmarCantidad()">AGREGAR</button>
+      </div>
+    </div>
+
     <!-- MODAL CHECKOUT -->
     <div id="modalCheckout" class="modal-overlay" style="display:none">
       <div class="modal-content checkout-modal">
