@@ -102,8 +102,23 @@
         </div>
         <div class="config-card">
           <h4>Gestión de Productos</h4>
-          <p class="config-helper">Los productos se administran directamente desde Supabase Dashboard.</p>
-          <a href="https://supabase.com/dashboard/project/putmambqopgifxnhervv" target="_blank" class="btn-link">Ir a Supabase →</a>
+          <div class="prod-form">
+            <input type="hidden" id="prodId">
+            <select id="prodCategoria" class="prod-input"></select>
+            <input type="text" id="prodNombre" class="prod-input" placeholder="Nombre del producto">
+            <input type="number" id="prodPrecio" class="prod-input" step="0.01" min="0" placeholder="Precio en USD">
+            <div class="prod-form-row">
+              <label class="prod-toggle">
+                <input type="checkbox" id="prodActivo" checked> Activo
+              </label>
+              <div class="prod-form-btns">
+                <button class="btn-cancelar" onclick="cancelarEdicion()" id="btnCancelar" style="display:none">Cancelar</button>
+                <button class="btn-guardar" onclick="guardarProducto()" id="btnGuardarProducto">Agregar</button>
+              </div>
+            </div>
+            <div class="config-status" id="prodStatus"></div>
+          </div>
+          <div class="prod-lista" id="productosLista"></div>
         </div>
       </div>
     </div>
