@@ -1,57 +1,107 @@
+const DENOMINACIONES = [500, 200, 100, 50]
+
 function calcularTotalBs(totalUsd, tasaBcv) {
   return totalUsd * tasaBcv
 }
 
-function calcularRedondeoEfectivo(totalBs) {
-  const residuo = totalBs % 100
-  if (residuo === 0) return totalBs
-  const base = Math.floor(totalBs / 100) * 100
+function piso50(monto) {
+  return Math.floor(monto / 50) * 50
+}
+
+function techo50(monto) {
+  const residuo = monto % 100
+  if (residuo === 0) return monto
+  const base = Math.floor(monto / 100) * 100
   if (residuo <= 50) return base + 50
   return base + 100
+}
+
+function desglosarBilletes(monto) {
+  const billetes = []
+  let resto = monto
+  for (const denom of DENOMINACIONES) {
+    const cantidad = Math.floor(resto / denom)
+    if (cantidad > 0) {
+      billetes.push({ denom, cantidad })
+      resto -= cantidad * denom
+    }
+  }
+  return billetes
 }
 
 function calcularAjusteRedondeo(montoCobrado, montoExacto) {
   return +(montoCobrado - montoExacto).toFixed(2)
 }
 
-function calcularCheckout(totalUsd, tasaBcv, pagos) {
-  const totalBsExacto = calcularTotalBs(totalUsd, tasaBcv)
-  const totalBsEfectivo = calcularRedondeoEfectivo(totalBsExacto)
+function calcularCheckout(totalUsd, tasaBcv, tasaVuelto, pagos) {
+  const totalBsExacto = +calcularTotalBs(totalUsd, tasaBcv).toFixed(2)
+  const totalBsEfectivo = techo50(totalBsExacto)
 
   const pagoUsd = +(pagos.usd || 0)
   const pagoBs = +(pagos.bs || 0)
   const pagoPagoMovil = +(pagos.pagoMovil || 0)
   const pagoPunto = +(pagos.punto || 0)
 
-  const pagoUsdEnBs = pagoUsd * tasaBcv
-  const digitalBs = pagoPagoMovil + pagoPunto
+  const digital = pagoPagoMovil + pagoPunto
 
-  const totalPagadoBs = pagoBs + pagoUsdEnBs + digitalBs
-  const aplicaEfectivo = pagoBs > 0 || pagoUsd > 0
-  const totalACobrar = aplicaEfectivo ? totalBsEfectivo : totalBsExacto
+  let saldoBs = totalBsExacto
 
-  const faltante = +(totalACobrar - totalPagadoBs).toFixed(2)
-  const excedente = +(totalPagadoBs - totalACobrar).toFixed(2)
-
-  let vueltoBs = 0
-  let faltanteFinal = 0
-
-  if (excedente > 0 && pagoUsd > 0) {
-    vueltoBs = excedente
-  } else if (faltante > 0) {
-    faltanteFinal = faltante
+  if (pagoUsd > 0) {
+    saldoBs -= pagoUsd * tasaBcv
   }
 
-  const ajusteRedondeo = aplicaEfectivo
-    ? calcularAjusteRedondeo(totalBsEfectivo, totalBsExacto)
-    : 0
+  if (digital > 0) {
+    saldoBs -= digital
+  }
+
+  const remanenteBsEfectivo = Math.max(0, saldoBs)
+  const aplicaRedondeo = pagoBs > 0 || (remanenteBsEfectivo > 0 && pagoUsd > 0 && pagoBs === 0)
+
+  let montoCobradoBsExacto = 0
+  let montoCobradoBsEfectivo = 0
+  let ajusteRedondeo = 0
+
+  if (aplicaRedondeo && remanenteBsEfectivo > 0) {
+    montoCobradoBsEfectivo = techo50(remanenteBsEfectivo)
+    ajusteRedondeo = calcularAjusteRedondeo(montoCobradoBsEfectivo, remanenteBsEfectivo)
+  } else {
+    montoCobradoBsExacto = remanenteBsEfectivo
+  }
+
+  const totalACobrarBs = (pagoUsd * tasaBcv) + digital + montoCobradoBsExacto + montoCobradoBsEfectivo
+  const totalPagadoBs = (pagoUsd * tasaBcv) + digital + pagoBs
+
+  let faltante = +(totalACobrarBs - totalPagadoBs).toFixed(2)
+  let excedente = +(totalPagadoBs - totalACobrarBs).toFixed(2)
+
+  let vueltoBs = 0
+  let vueltoBilletes = []
+
+  if (excedente > 0 && pagoUsd > 0) {
+    let vueltoTeoricoBs = excedente
+
+    if (tasaVuelto && tasaVuelto > 0) {
+      const vueltoUsd = excedente / tasaBcv
+      vueltoTeoricoBs = vueltoUsd * tasaVuelto
+    }
+
+    vueltoBs = piso50(vueltoTeoricoBs)
+    vueltoBilletes = desglosarBilletes(vueltoBs)
+    faltante = 0
+  }
+
+  if (faltante < 0) faltante = 0
+
+  const totalBsCobrado = (pagoUsd * tasaBcv) + digital + pagoBs - vueltoBs
 
   return {
-    totalBsExacto: +totalBsExacto.toFixed(2),
+    totalBsExacto,
     totalBsEfectivo,
-    faltante: +faltanteFinal.toFixed(2),
+    faltante: +faltante.toFixed(2),
     vueltoBs: +vueltoBs.toFixed(2),
+    vueltoBilletes,
     ajusteRedondeo,
-    puedeProcesar: faltanteFinal <= 0
+    totalBsCobrado: +totalBsCobrado.toFixed(2),
+    puedeProcesar: faltante <= 0
   }
 }

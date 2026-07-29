@@ -411,8 +411,35 @@ body {
 
 .prod-input:focus { border-color: var(--accent); }
 
-.prod-form-row { display: flex; align-items: center; justify-content: space-between; }
+.prod-form-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
 .prod-form-btns { display: flex; gap: 6px; }
+.prod-stock-row { display: none; }
+
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+.btn-scrapear {
+  padding: 12px 16px; border: 1px solid var(--success);
+  background: transparent; color: var(--success);
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-scrapear:active { background: var(--success); color: white; }
+
+.cat-form { display: flex; gap: 8px; margin-bottom: 8px; }
+.cat-form input { flex: 1; }
+
+.stock-badge {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  background: var(--accent); color: white;
+  padding: 1px 6px; border-radius: 4px; margin-left: 4px;
+}
+
+.producto-stock {
+  font-size: 9px; color: var(--text-muted); margin-top: 2px;
+}
+
+.billetes-title { font-size: 12px; font-weight: 600; margin-top: 8px; color: var(--accent); }
+.billete-line { font-size: 12px; color: var(--text-muted); padding: 1px 0; }
 
 .btn-cancelar {
   padding: 12px 16px; border: 1px solid rgba(255,255,255,0.2);

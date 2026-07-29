@@ -85,6 +85,7 @@
           <div class="estado-linea" id="checkFaltante">Faltante: Bs. 0.00</div>
           <div class="estado-linea" id="checkVuelto">Vuelto Bs.: Bs. 0.00</div>
           <div class="estado-linea" id="checkRedondeo">Ajuste redondeo: Bs. 0.00</div>
+          <div id="checkBilletes"></div>
         </div>
         <button class="btn-procesar" id="btnProcesar" onclick="procesarVenta()">PROCESAR VENTA</button>
       </div>
@@ -94,12 +95,30 @@
     <div id="view-config" class="view">
       <div class="config-container">
         <h2>Configuración</h2>
+
         <div class="config-card">
+          <h4>Tasas de Cambio</h4>
           <label>Tasa BCV del día (Bs./USD)</label>
           <input type="number" id="tasaBcvInput" class="config-input" step="0.01" min="0">
-          <button class="btn-guardar" onclick="guardarTasa()">Guardar Tasa</button>
+          <label>Tasa Vuelto (Bs./USD) — opcional</label>
+          <input type="number" id="tasaVueltoInput" class="config-input" step="0.01" min="0" placeholder="Igual que BCV si se deja en 0">
+          <div class="btn-row">
+            <button class="btn-guardar" onclick="guardarTasa()">Guardar Tasas</button>
+            <button class="btn-scrapear" onclick="obtenerTasaBCV()" id="btnScrapear">Obtener automáticamente</button>
+          </div>
           <div class="config-status" id="configStatus"></div>
         </div>
+
+        <div class="config-card">
+          <h4>Categorías</h4>
+          <div class="cat-form">
+            <input type="hidden" id="catId">
+            <input type="text" id="catNombre" class="prod-input" placeholder="Nombre de la categoría">
+            <button class="btn-guardar" onclick="guardarCategoria()" id="btnGuardarCat">Agregar</button>
+          </div>
+          <div class="prod-lista" id="categoriasLista"></div>
+        </div>
+
         <div class="config-card">
           <h4>Gestión de Productos</h4>
           <div class="prod-form">
@@ -114,6 +133,15 @@
               <label class="prod-toggle">
                 <input type="checkbox" id="prodActivo" checked> Activo
               </label>
+              <label class="prod-toggle">
+                <input type="checkbox" id="prodInventario" onchange="document.getElementById('stockRow').style.display = this.checked ? 'block' : 'none'"> Maneja inventario
+              </label>
+            </div>
+            <div class="prod-stock-row" id="stockRow" style="display:none">
+              <label class="prod-label">Stock inicial</label>
+              <input type="number" id="prodStock" class="prod-input" step="1" min="0" value="0">
+            </div>
+            <div class="prod-form-row">
               <div class="prod-form-btns">
                 <button class="btn-cancelar" onclick="cancelarEdicion()" id="btnCancelar" style="display:none">Cancelar</button>
                 <button class="btn-guardar" onclick="guardarProducto()" id="btnGuardarProducto">Agregar</button>

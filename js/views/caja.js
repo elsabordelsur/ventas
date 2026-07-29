@@ -2,10 +2,14 @@ let categorias = []
 let productos = []
 let ticket = []
 let tasaBcvActual = 0
+let tasaVueltoActual = 0
 
 async function cargarTasa() {
-  const { data } = await supabase.from('configuracion').select('tasa_bcv').eq('id', 1).single()
-  if (data) tasaBcvActual = data.tasa_bcv
+  const { data } = await supabase.from('configuracion').select('tasa_bcv, tasa_vuelto').eq('id', 1).single()
+  if (data) {
+    tasaBcvActual = data.tasa_bcv
+    tasaVueltoActual = data.tasa_vuelto || data.tasa_bcv
+  }
 }
 
 async function cargarCategorias() {
@@ -43,6 +47,7 @@ function renderProductos(lista) {
     `<button class="producto-btn" onclick="agregarAlTicket(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})">
       <span class="producto-nombre">${p.nombre}</span>
       <span class="producto-precio">$${p.precio_usd.toFixed(2)}</span>
+      ${p.maneja_inventario ? `<span class="producto-stock">Stock: ${p.stock}</span>` : ''}
     </button>`
   ).join('')
 }
@@ -102,7 +107,7 @@ function eliminarDelTicket(index) {
 function actualizarTotales() {
   const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
   const totalBsExacto = calcularTotalBs(totalUsd, tasaBcvActual)
-  const totalBsEfectivo = calcularRedondeoEfectivo(totalBsExacto)
+  const totalBsEfectivo = techo50(totalBsExacto)
 
   document.getElementById('totalUsd').textContent = `$${totalUsd.toFixed(2)}`
   document.getElementById('totalBsDigital').textContent = `Bs. ${totalBsExacto.toFixed(2)}`
@@ -114,12 +119,13 @@ function abrirCheckout() {
   const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
   document.getElementById('checkTotalUsd').textContent = `$${totalUsd.toFixed(2)}`
   document.getElementById('checkTotalBsExacto').textContent = `Bs. ${calcularTotalBs(totalUsd, tasaBcvActual).toFixed(2)}`
-  document.getElementById('checkTotalBsEfectivo').textContent = `Bs. ${calcularRedondeoEfectivo(calcularTotalBs(totalUsd, tasaBcvActual))}`
+  document.getElementById('checkTotalBsEfectivo').textContent = `Bs. ${techo50(calcularTotalBs(totalUsd, tasaBcvActual))}`
 
   document.getElementById('pagoUsd').value = '0'
   document.getElementById('pagoBs').value = '0'
   document.getElementById('pagoPagoMovil').value = '0'
   document.getElementById('pagoPunto').value = '0'
+  document.getElementById('checkBilletes').innerHTML = ''
 
   document.getElementById('modalCheckout').style.display = 'flex'
   calcularCheckoutUI()
@@ -138,12 +144,19 @@ function calcularCheckoutUI() {
     punto: +document.getElementById('pagoPunto').value || 0
   }
 
-  const result = calcularCheckout(totalUsd, tasaBcvActual, pagos)
+  const result = calcularCheckout(totalUsd, tasaBcvActual, tasaVueltoActual, pagos)
 
   document.getElementById('checkFaltante').textContent = `Faltante: Bs. ${result.faltante.toFixed(2)}`
   document.getElementById('checkFaltante').style.color = result.faltante > 0 ? 'var(--danger)' : 'var(--success)'
   document.getElementById('checkVuelto').textContent = `Vuelto Bs.: Bs. ${result.vueltoBs.toFixed(2)}`
   document.getElementById('checkRedondeo').textContent = `Ajuste redondeo: Bs. ${result.ajusteRedondeo.toFixed(2)}`
+
+  if (result.vueltoBilletes && result.vueltoBilletes.length > 0) {
+    document.getElementById('checkBilletes').innerHTML = '<div class="billetes-title">Billetes a entregar:</div>' +
+      result.vueltoBilletes.map(b => `<div class="billete-line">${b.cantidad} × Bs. ${b.denom}</div>`).join('')
+  } else {
+    document.getElementById('checkBilletes').innerHTML = ''
+  }
 
   const btn = document.getElementById('btnProcesar')
   btn.disabled = !result.puedeProcesar
@@ -164,13 +177,13 @@ async function procesarVenta() {
     punto: +document.getElementById('pagoPunto').value || 0
   }
 
-  const result = calcularCheckout(totalUsd, tasaBcvActual, pagos)
+  const result = calcularCheckout(totalUsd, tasaBcvActual, tasaVueltoActual, pagos)
 
   const { data: venta, error } = await supabase.from('ventas').insert({
     total_usd: +totalUsd.toFixed(2),
     tasa_bcv_aplicada: tasaBcvActual,
     total_bs_teorico: result.totalBsExacto,
-    total_bs_cobrado: result.puedeProcesar ? (pagos.bs > 0 || pagos.usd > 0 ? result.totalBsEfectivo : result.totalBsExacto) : 0,
+    total_bs_cobrado: result.totalBsCobrado,
     pago_usd_efectivo: pagos.usd,
     pago_bs_efectivo: pagos.bs,
     pago_pagomovil: pagos.pagoMovil,
@@ -196,6 +209,13 @@ async function procesarVenta() {
 
   const { error: detError } = await supabase.from('venta_detalles').insert(detalles)
   if (detError) console.error('Error al guardar detalles:', detError)
+
+  for (const t of ticket) {
+    const prod = productos.find(p => p.id === t.id)
+    if (prod && prod.maneja_inventario) {
+      await supabase.from('productos').update({ stock: prod.stock - t.cantidad }).eq('id', t.id)
+    }
+  }
 
   ticket = []
   renderTicket()
