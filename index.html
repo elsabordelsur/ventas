@@ -118,6 +118,7 @@
               <input type="number" id="pagoMontoInput" class="pago-input" step="0.01" min="0" value="0" oninput="calcularCheckoutUI()" autofocus>
               <span class="pago-monto-moneda" id="pagoMontoMoneda">$</span>
             </div>
+            <button class="btn-exacto" id="btnExacto" style="display:none" onclick="ponerExacto()">EXACTO</button>
           </div>
           <div class="checkout-estado" id="checkoutEstado">
             <div class="estado-linea" id="checkFaltante">Faltante: Bs. 0.00</div>

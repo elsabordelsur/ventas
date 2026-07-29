@@ -395,6 +395,14 @@ body {
 .pago-monto-row { display: flex; align-items: center; gap: 8px; }
 .pago-monto-moneda { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-mono); }
 
+.btn-exacto {
+  margin-top: 8px; width: 100%; padding: 14px;
+  border: 1px solid var(--green); background: var(--green-bg);
+  color: var(--green); font-size: 14px; font-weight: 700;
+  cursor: pointer; letter-spacing: 1px;
+}
+.btn-exacto:active { background: var(--green); color: #fff; }
+
 .pago-acciones { display: flex; gap: 8px; }
 .pago-acciones .btn-procesar { flex: 1; }
 

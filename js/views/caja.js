@@ -160,21 +160,37 @@ function seleccionarMetodo(metodo) {
   input.value = (metodo === 'pagomovil' || metodo === 'punto') ? totalBs.toFixed(2) : '0'
   document.getElementById('checkBilletes').innerHTML = ''
 
+  const btnExacto = document.getElementById('btnExacto')
+  if (metodo === 'usd' && Number.isInteger(totalUsd)) {
+    btnExacto.style.display = 'block'
+    btnExacto.textContent = `Exacto: $${totalUsd}`
+  } else {
+    btnExacto.style.display = 'none'
+  }
+
   document.getElementById('checkoutStepMetodo').style.display = 'none'
   document.getElementById('checkoutStepMonto').style.display = 'block'
 
   if (metodo !== 'pagomovil' && metodo !== 'punto') {
     calcularCheckoutUI()
   } else {
-    document.getElementById('checkFaltante').textContent = 'Monto exacto'
-    document.getElementById('checkFaltante').style.color = 'var(--success)'
-    document.getElementById('checkVuelto').textContent = 'Vuelto: Bs. 0.00'
+    document.getElementById('checkFaltante').textContent = ''
+    document.getElementById('checkVuelto').textContent = 'Monto exacto'
+    document.getElementById('checkVuelto').style.color = 'var(--success)'
+    document.getElementById('checkVuelto').style.fontWeight = ''
+    document.getElementById('checkVuelto').style.fontSize = ''
     document.getElementById('checkRedondeo').textContent = ''
     document.getElementById('checkBilletes').innerHTML = ''
     const btn = document.getElementById('btnProcesar')
     btn.disabled = false
     btn.style.opacity = '1'
   }
+}
+
+function ponerExacto() {
+  const totalUsd = ticket.reduce((s, t) => s + t.precio * t.cantidad, 0)
+  document.getElementById('pagoMontoInput').value = totalUsd
+  calcularCheckoutUI()
 }
 
 function volverMetodos() {
@@ -193,9 +209,24 @@ function calcularCheckoutUI() {
 
   const result = calcularCheckout(totalUsd, tasaBcvActual, tasaVueltoActual, pagos)
 
-  document.getElementById('checkFaltante').textContent = `Faltante: Bs. ${result.faltante.toFixed(2)}`
-  document.getElementById('checkFaltante').style.color = result.faltante > 0 ? 'var(--danger)' : 'var(--success)'
-  document.getElementById('checkVuelto').textContent = `Vuelto Bs.: Bs. ${result.vueltoBs.toFixed(2)}`
+  const tieneVuelto = result.vueltoBs > 0
+
+  document.getElementById('checkFaltante').textContent = result.faltante > 0 ? `Faltante: Bs. ${result.faltante.toFixed(2)}` : ''
+  document.getElementById('checkFaltante').style.color = 'var(--danger)'
+
+  const vueltoEl = document.getElementById('checkVuelto')
+  if (tieneVuelto) {
+    vueltoEl.textContent = `Vuelto: Bs. ${result.vueltoBs.toFixed(2)}`
+    vueltoEl.style.color = 'var(--green)'
+    vueltoEl.style.fontWeight = '700'
+    vueltoEl.style.fontSize = '16px'
+  } else {
+    vueltoEl.textContent = result.faltante <= 0 && monto > 0 ? 'Pago exacto' : ''
+    vueltoEl.style.color = 'var(--success)'
+    vueltoEl.style.fontWeight = ''
+    vueltoEl.style.fontSize = ''
+  }
+
   document.getElementById('checkRedondeo').textContent = result.ajusteRedondeo ? `Ajuste redondeo: Bs. ${result.ajusteRedondeo.toFixed(2)}` : ''
 
   if (result.vueltoBilletes && result.vueltoBilletes.length > 0) {
