@@ -45,35 +45,33 @@ async function obtenerTasaBCV() {
   const btn = document.getElementById('btnScrapear')
   btn.textContent = 'Obteniendo...'
   btn.disabled = true
+
+  function ponerTasa(tasa) {
+    document.getElementById('tasaBcvInput').value = tasa.toFixed(2)
+    document.getElementById('tasaVueltoInput').value = tasa.toFixed(2)
+    document.getElementById('configStatus').textContent = `✅ Tasa BCV actualizada: Bs. ${tasa.toFixed(2)}`
+    document.getElementById('configStatus').style.color = 'var(--success)'
+  }
+
   try {
-    const res = await fetch('https://pydolarve.com/api/dolar?moneda=usd')
+    const res = await fetch('https://corsproxy.io/?url=https://www.bcv.org.ve/')
+    const html = await res.text()
+    const m = html.match(/id="dolar"[^>]*>.*?<strong[^>]*>\s*([\d.,]+)\s*<\/strong>/)
+    if (m) {
+      const str = m[1].replace(/\./g, '').replace(',', '.')
+      const tasa = +str
+      if (tasa && tasa > 0) { ponerTasa(tasa); btn.textContent = 'Obtener automáticamente'; btn.disabled = false; return }
+    }
+  } catch {}
+
+  try {
+    const res = await fetch('https://ve.dolarapi.com/v1/tasa/BCV')
     const data = await res.json()
-    const tasa = +(data.bcv || 0)
-    if (tasa && tasa > 0) {
-      document.getElementById('tasaBcvInput').value = tasa
-      document.getElementById('tasaVueltoInput').value = tasa
-      document.getElementById('configStatus').textContent = `✅ Tasa BCV actualizada: Bs. ${tasa}`
-      document.getElementById('configStatus').style.color = 'var(--success)'
-    } else {
-      throw new Error('No se pudo obtener la tasa')
-    }
+    const tasa = +(data.tasa || 0)
+    if (tasa && tasa > 0) { ponerTasa(tasa) } else { throw new Error() }
   } catch {
-    try {
-      const res = await fetch('https://ve.dolarapi.com/v1/tasa/BCV')
-      const data = await res.json()
-      const tasa = +(data.tasa || 0)
-      if (tasa && tasa > 0) {
-        document.getElementById('tasaBcvInput').value = tasa
-        document.getElementById('tasaVueltoInput').value = tasa
-        document.getElementById('configStatus').textContent = `✅ Tasa BCV actualizada: Bs. ${tasa}`
-        document.getElementById('configStatus').style.color = 'var(--success)'
-      } else {
-        throw new Error('No se pudo obtener la tasa')
-      }
-    } catch {
-      document.getElementById('configStatus').textContent = '❌ No se pudo obtener la tasa automáticamente'
-      document.getElementById('configStatus').style.color = 'var(--danger)'
-    }
+    document.getElementById('configStatus').textContent = '❌ No se pudo obtener la tasa automáticamente'
+    document.getElementById('configStatus').style.color = 'var(--danger)'
   }
   btn.textContent = 'Obtener automáticamente'
   btn.disabled = false
