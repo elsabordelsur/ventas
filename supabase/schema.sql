@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS productos (
   maneja_inventario BOOLEAN NOT NULL DEFAULT FALSE,
   stock INTEGER NOT NULL DEFAULT 0,
   unidades_por_caja INTEGER NOT NULL DEFAULT 1,
+  tecla_rapida TEXT DEFAULT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -97,6 +98,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Categorías de ejemplo
 INSERT INTO categorias (nombre) VALUES
+  ('Venta'),
   ('Empanadas'),
   ('Pastelitos'),
   ('Bebidas'),

@@ -208,6 +208,12 @@ body {
 .producto-nombre { font-size: 13px; font-weight: 600; text-align: center; color: var(--text); margin-top: 4px; }
 .producto-precio-bs { font-size: 13px; color: var(--text-muted); font-weight: 600; font-family: var(--font-mono); }
 .producto-precio { font-size: 15px; color: var(--green); font-weight: 700; font-family: var(--font-mono); }
+.producto-fkey {
+  position: absolute; top: 4px; right: 4px;
+  font-size: 9px; font-weight: 700; background: var(--nav-bg); color: #fff;
+  padding: 1px 5px;
+}
+.producto-btn { position: relative; }
 
 /* TICKET */
 .ticket-header {
@@ -563,6 +569,12 @@ body {
 .stock-badge {
   display: inline-block; font-size: 9px; font-weight: 600;
   background: var(--blue-bg); color: var(--blue);
+  padding: 1px 5px; margin-left: 4px;
+}
+
+.fkey-badge {
+  display: inline-block; font-size: 9px; font-weight: 700;
+  background: var(--nav-bg); color: #fff;
   padding: 1px 5px; margin-left: 4px;
 }
 

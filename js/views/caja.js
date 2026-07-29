@@ -22,6 +22,16 @@ async function cargarProductos() {
   if (data) productos = data
 }
 
+document.addEventListener('keydown', e => {
+  const fkey = `F${e.key.replace('F', '')}`
+  if (!fkey.startsWith('F') || isNaN(+fkey.slice(1))) return
+  const fNum = +fkey.slice(1)
+  if (fNum < 1 || fNum > 12) return
+  e.preventDefault()
+  const prod = productos.find(p => p.tecla_rapida === fkey)
+  if (prod) abrirModalCantidad(prod.id, prod.nombre.replace(/'/g, "\\'"), prod.precio_usd)
+})
+
 function renderCategoriaTabs() {
   const container = document.getElementById('categoriaTabs')
   container.innerHTML = categorias.map((c, i) =>
@@ -45,7 +55,8 @@ function renderProductos(lista) {
   }
   grid.innerHTML = lista.map(p => {
     const bsPrice = (p.precio_usd * tasaBcvActual).toFixed(2)
-    return `<button class="producto-btn" onclick="abrirModalCantidad(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})">
+    return `<button class="producto-btn${p.tecla_rapida ? ' has-fkey' : ''}" onclick="abrirModalCantidad(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.precio_usd})"${p.tecla_rapida ? ` data-fkey="${p.tecla_rapida}"` : ''}>
+      ${p.tecla_rapida ? `<span class="producto-fkey">${p.tecla_rapida}</span>` : ''}
       <span class="producto-precio-bs">Bs. ${bsPrice}</span>
       <span class="producto-precio">$${p.precio_usd.toFixed(2)}</span>
       <span class="producto-nombre">${p.nombre}</span>

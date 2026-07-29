@@ -169,7 +169,7 @@ async function cargarProductosAdmin() {
   container.innerHTML = data.map(p =>
     `<div class="prod-item${p.activo ? '' : ' inactivo'}">
       <div class="prod-item-info">
-        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds</span>` : ''}</div>
+        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds</span>` : ''} ${p.tecla_rapida ? `<span class="fkey-badge">${p.tecla_rapida}</span>` : ''}</div>
         <div class="prod-item-categoria">${p.categorias?.nombre || 'Sin categoría'}</div>
       </div>
       <div class="prod-item-precio">$${p.precio_usd.toFixed(2)}</div>
@@ -190,6 +190,7 @@ function editarProducto(id) {
     document.getElementById('prodInventario').checked = data.maneja_inventario
     document.getElementById('stockRow').style.display = data.maneja_inventario ? 'block' : 'none'
     document.getElementById('prodUndsCaja').value = data.unidades_por_caja || 1
+    document.getElementById('prodTecla').value = data.tecla_rapida || ''
     document.getElementById('btnGuardarProducto').textContent = 'Actualizar'
     document.getElementById('btnCancelar').style.display = 'inline-block'
     document.getElementById('prodStatus').textContent = ''
@@ -205,6 +206,7 @@ function cancelarEdicion() {
   document.getElementById('prodInventario').checked = false
   document.getElementById('stockRow').style.display = 'none'
   document.getElementById('prodUndsCaja').value = 1
+  document.getElementById('prodTecla').value = ''
   document.getElementById('btnGuardarProducto').textContent = 'Agregar'
   document.getElementById('btnCancelar').style.display = 'none'
   document.getElementById('prodStatus').textContent = ''
@@ -218,6 +220,7 @@ async function guardarProducto() {
   const activo = document.getElementById('prodActivo').checked
   const maneja_inventario = document.getElementById('prodInventario').checked
   const unidades_por_caja = +document.getElementById('prodUndsCaja').value || 1
+  const tecla_rapida = document.getElementById('prodTecla').value || null
 
   if (!categoria_id || !nombre || !precio_usd) {
     document.getElementById('prodStatus').textContent = 'Completa todos los campos'
@@ -229,11 +232,11 @@ async function guardarProducto() {
 
   if (id) {
     ({ error } = await supabase.from('productos').update({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, unidades_por_caja
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, unidades_por_caja, tecla_rapida
     }).eq('id', id))
   } else {
     ({ error } = await supabase.from('productos').insert({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock: 0, unidades_por_caja
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock: 0, unidades_por_caja, tecla_rapida
     }))
   }
 
