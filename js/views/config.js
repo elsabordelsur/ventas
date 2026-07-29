@@ -166,10 +166,11 @@ async function cargarProductosAdmin() {
   container.innerHTML = data.map(p =>
     `<div class="prod-item${p.activo ? '' : ' inactivo'}">
       <div class="prod-item-info">
-        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock}</span>` : ''}</div>
+        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds (${p.unidades_por_caja || 1}/caja)</span>` : ''}</div>
         <div class="prod-item-categoria">${p.categorias?.nombre || 'Sin categoría'}</div>
       </div>
       <div class="prod-item-precio">$${p.precio_usd.toFixed(2)}</div>
+      ${p.maneja_inventario ? `<button class="prod-item-accion ingresar" onclick="ingresarStock(${p.id})">+Caja</button>` : ''}
       <button class="prod-item-accion editar" onclick="editarProducto(${p.id})">✎</button>
       <button class="prod-item-accion eliminar" onclick="eliminarProducto(${p.id})">✕</button>
     </div>`
@@ -187,6 +188,7 @@ function editarProducto(id) {
     document.getElementById('prodInventario').checked = data.maneja_inventario
     document.getElementById('stockRow').style.display = data.maneja_inventario ? 'block' : 'none'
     document.getElementById('prodStock').value = data.stock
+    document.getElementById('prodUndsCaja').value = data.unidades_por_caja || 1
     document.getElementById('btnGuardarProducto').textContent = 'Actualizar'
     document.getElementById('btnCancelar').style.display = 'inline-block'
     document.getElementById('prodStatus').textContent = ''
@@ -202,6 +204,7 @@ function cancelarEdicion() {
   document.getElementById('prodInventario').checked = false
   document.getElementById('stockRow').style.display = 'none'
   document.getElementById('prodStock').value = 0
+  document.getElementById('prodUndsCaja').value = 1
   document.getElementById('btnGuardarProducto').textContent = 'Agregar'
   document.getElementById('btnCancelar').style.display = 'none'
   document.getElementById('prodStatus').textContent = ''
@@ -215,6 +218,7 @@ async function guardarProducto() {
   const activo = document.getElementById('prodActivo').checked
   const maneja_inventario = document.getElementById('prodInventario').checked
   const stock = +document.getElementById('prodStock').value || 0
+  const unidades_por_caja = +document.getElementById('prodUndsCaja').value || 1
 
   if (!categoria_id || !nombre || !precio_usd) {
     document.getElementById('prodStatus').textContent = 'Completa todos los campos'
@@ -226,11 +230,11 @@ async function guardarProducto() {
 
   if (id) {
     ({ error } = await supabase.from('productos').update({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock, unidades_por_caja
     }).eq('id', id))
   } else {
     ({ error } = await supabase.from('productos').insert({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock, unidades_por_caja
     }))
   }
 
@@ -259,4 +263,15 @@ async function eliminarProducto(id) {
   await cargarProductosAdmin()
   await cargarProductos()
   renderCategoriaTabs()
+}
+
+async function ingresarStock(id) {
+  const cajas = prompt('¿Cuántas cajas quieres ingresar?', '1')
+  if (!cajas || +cajas <= 0) return
+  const { data } = await supabase.from('productos').select('stock, unidades_por_caja').eq('id', id).single()
+  if (!data) return
+  const unds = +cajas * (data.unidades_por_caja || 1)
+  const { error } = await supabase.from('productos').update({ stock: (data.stock || 0) + unds }).eq('id', id)
+  if (error) { alert('Error: ' + error.message); return }
+  await cargarProductosAdmin()
 }

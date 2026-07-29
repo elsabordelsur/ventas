@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS productos (
   nombre TEXT NOT NULL,
   precio_usd NUMERIC(10, 2) NOT NULL CHECK (precio_usd > 0),
   activo BOOLEAN NOT NULL DEFAULT TRUE,
+  maneja_inventario BOOLEAN NOT NULL DEFAULT FALSE,
+  stock INTEGER NOT NULL DEFAULT 0,
+  unidades_por_caja INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
