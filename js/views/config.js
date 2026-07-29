@@ -11,6 +11,7 @@ async function cargarConfig() {
   await cargarCategoriasSelect()
   await cargarCategoriasAdmin()
   await cargarProductosAdmin()
+  await cargarInventarioSelect()
 }
 
 async function guardarTasa() {
@@ -166,11 +167,10 @@ async function cargarProductosAdmin() {
   container.innerHTML = data.map(p =>
     `<div class="prod-item${p.activo ? '' : ' inactivo'}">
       <div class="prod-item-info">
-        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds (${p.unidades_por_caja || 1}/caja)</span>` : ''}</div>
+        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds</span>` : ''}</div>
         <div class="prod-item-categoria">${p.categorias?.nombre || 'Sin categoría'}</div>
       </div>
       <div class="prod-item-precio">$${p.precio_usd.toFixed(2)}</div>
-      ${p.maneja_inventario ? `<button class="prod-item-accion ingresar" onclick="ingresarStock(${p.id})">+Caja</button>` : ''}
       <button class="prod-item-accion editar" onclick="editarProducto(${p.id})">✎</button>
       <button class="prod-item-accion eliminar" onclick="eliminarProducto(${p.id})">✕</button>
     </div>`
@@ -187,7 +187,6 @@ function editarProducto(id) {
     document.getElementById('prodActivo').checked = data.activo
     document.getElementById('prodInventario').checked = data.maneja_inventario
     document.getElementById('stockRow').style.display = data.maneja_inventario ? 'block' : 'none'
-    document.getElementById('prodStock').value = data.stock
     document.getElementById('prodUndsCaja').value = data.unidades_por_caja || 1
     document.getElementById('btnGuardarProducto').textContent = 'Actualizar'
     document.getElementById('btnCancelar').style.display = 'inline-block'
@@ -203,7 +202,6 @@ function cancelarEdicion() {
   document.getElementById('prodActivo').checked = true
   document.getElementById('prodInventario').checked = false
   document.getElementById('stockRow').style.display = 'none'
-  document.getElementById('prodStock').value = 0
   document.getElementById('prodUndsCaja').value = 1
   document.getElementById('btnGuardarProducto').textContent = 'Agregar'
   document.getElementById('btnCancelar').style.display = 'none'
@@ -217,7 +215,6 @@ async function guardarProducto() {
   const precio_usd = +document.getElementById('prodPrecio').value
   const activo = document.getElementById('prodActivo').checked
   const maneja_inventario = document.getElementById('prodInventario').checked
-  const stock = +document.getElementById('prodStock').value || 0
   const unidades_por_caja = +document.getElementById('prodUndsCaja').value || 1
 
   if (!categoria_id || !nombre || !precio_usd) {
@@ -230,11 +227,11 @@ async function guardarProducto() {
 
   if (id) {
     ({ error } = await supabase.from('productos').update({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock, unidades_por_caja
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, unidades_por_caja
     }).eq('id', id))
   } else {
     ({ error } = await supabase.from('productos').insert({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock, unidades_por_caja
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock: 0, unidades_por_caja
     }))
   }
 
@@ -248,6 +245,7 @@ async function guardarProducto() {
   document.getElementById('prodStatus').textContent = '✅ Producto guardado'
   document.getElementById('prodStatus').style.color = 'var(--success)'
   await cargarProductosAdmin()
+  await cargarInventarioSelect()
   await cargarProductos()
   renderCategoriaTabs()
 }
@@ -261,17 +259,53 @@ async function eliminarProducto(id) {
   }
   cancelarEdicion()
   await cargarProductosAdmin()
+  await cargarInventarioSelect()
   await cargarProductos()
   renderCategoriaTabs()
 }
 
-async function ingresarStock(id) {
-  const cajas = prompt('¿Cuántas cajas quieres ingresar?', '1')
-  if (!cajas || +cajas <= 0) return
-  const { data } = await supabase.from('productos').select('stock, unidades_por_caja').eq('id', id).single()
+async function cargarInventarioSelect() {
+  const { data } = await supabase.from('productos').select('*').eq('maneja_inventario', true).order('nombre')
+  const select = document.getElementById('invProducto')
+  select.innerHTML = '<option value="">Seleccionar producto</option>' +
+    (data || []).map(p => `<option value="${p.id}">${p.nombre} (Stock: ${p.stock} unds)</option>`).join('')
+  document.getElementById('invInfo').style.display = 'none'
+  document.getElementById('invStatus').textContent = ''
+}
+
+function mostrarInfoInventario() {
+  const id = +document.getElementById('invProducto').value
+  const info = document.getElementById('invInfo')
+  if (!id) { info.style.display = 'none'; return }
+  supabase.from('productos').select('*').eq('id', id).single().then(({ data }) => {
+    if (!data) return
+    info.innerHTML = `<strong>${data.nombre}</strong><br>
+      Stock actual: <strong>${data.stock} unidades</strong><br>
+      Unds. por caja: ${data.unidades_por_caja}`
+    info.style.display = 'block'
+  })
+}
+
+async function ingresarInventario() {
+  const id = +document.getElementById('invProducto').value
+  const cajas = +document.getElementById('invCajas').value
+  const status = document.getElementById('invStatus')
+
+  if (!id || !cajas || cajas < 1) {
+    status.textContent = 'Selecciona un producto y cantidad válida'
+    status.style.color = 'var(--danger)'
+    return
+  }
+
+  const { data } = await supabase.from('productos').select('stock, unidades_por_caja, nombre').eq('id', id).single()
   if (!data) return
-  const unds = +cajas * (data.unidades_por_caja || 1)
+  const unds = cajas * (data.unidades_por_caja || 1)
   const { error } = await supabase.from('productos').update({ stock: (data.stock || 0) + unds }).eq('id', id)
-  if (error) { alert('Error: ' + error.message); return }
+  if (error) { status.textContent = 'Error: ' + error.message; status.style.color = 'var(--danger)'; return }
+
+  status.textContent = `✅ ${cajas} caja(s) de ${data.nombre} ingresadas = ${unds} unidades`
+  status.style.color = 'var(--success)'
+  document.getElementById('invCajas').value = 1
+  await cargarInventarioSelect()
   await cargarProductosAdmin()
 }

@@ -433,6 +433,21 @@ body {
 
 .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 
+/* INVENTARIO */
+.inv-form { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; }
+.inv-cajas-row { display: flex; gap: 6px; align-items: center; }
+.inv-input {
+  flex: 1; padding: 10px 12px; border: 1px solid var(--border);
+  background: var(--bg-input); color: var(--text); font-size: 16px;
+  font-weight: 700; font-family: var(--font-mono); outline: none; max-width: 100px;
+}
+.inv-input:focus { border-color: var(--nav-bg); }
+.btn-ingresar {
+  padding: 10px 24px; border: none; background: var(--green); color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1px;
+}
+.btn-ingresar:active { opacity: 0.9; }
+
 .btn-scrapear {
   padding: 10px 14px; border: 1px solid var(--blue);
   background: transparent; color: var(--blue);
@@ -482,7 +497,6 @@ body {
   color: var(--text-muted);
   padding: 3px 6px; cursor: pointer; font-size: 11px;
 }
-.prod-item-accion.ingresar { border-color: var(--green); color: var(--green); font-size: 9px; padding: 3px 4px; }
 .prod-item-accion.editar { border-color: var(--blue); color: var(--blue); }
 .prod-item-accion.eliminar { border-color: var(--text-muted); color: var(--text-muted); }
 .prod-item-accion.borrar { border-color: var(--red); color: var(--red); font-weight: 700; }
