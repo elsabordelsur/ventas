@@ -25,18 +25,22 @@ function navigate(view) {
 
   if (view === 'config') cargarConfig().catch(e => console.error('Error cargando config:', e))
   if (view === 'cierre') cargarCierre().catch(e => console.error('Error cargando cierre:', e))
+  if (view === 'estadisticas') cargarEstadisticas().catch(e => console.error('Error cargando estadísticas:', e))
 }
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(r => {
+    r.addEventListener('updatefound', () => {
+      const newSW = r.installing
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'activated') window.location.reload()
+      })
+    })
     if (r.active) r.update()
   })
 }
 
-function toggleMenu() {
-  const d = document.getElementById('menuDropdown')
-  d.style.display = d.style.display === 'none' ? 'block' : 'none'
-}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   navigate('caja')

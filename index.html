@@ -26,6 +26,10 @@
     <!-- MENU OVERLAY + DROPDOWN -->
     <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
     <div id="menuDropdown" class="menu-dropdown">
+      <button class="menu-dropdown-item" onclick="navigate('estadisticas'); toggleMenu()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 3V1M11 3V1M2 7h12"/></svg>
+        ESTADÍSTICAS
+      </button>
       <button class="menu-dropdown-item" onclick="navigate('cierre'); toggleMenu()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 3V1M11 3V1M2 7h12"/></svg>
         CIERRE
@@ -39,8 +43,9 @@
           <div class="categoria-tabs" id="categoriaTabs"></div>
           <div class="productos-grid" id="productosGrid"></div>
         </div>
-        <div class="pos-right">
-          <div class="ticket-header">
+        <div class="pos-right" id="posRight">
+          <div class="ticket-header" id="ticketHeader" onclick="toggleTicket()">
+            <div class="ticket-handle"></div>
             <h3>Ticket Actual</h3>
             <span class="item-count" id="itemCount">0</span>
           </div>
@@ -115,7 +120,7 @@
           <div class="pago-monto">
             <div class="pago-monto-label" id="pagoMontoLabel">¿Con cuánto paga?</div>
             <div class="pago-monto-row">
-              <input type="number" id="pagoMontoInput" class="pago-input" step="0.01" min="0" value="0" oninput="calcularCheckoutUI()" autofocus>
+              <input type="text" id="pagoMontoInput" class="pago-input" inputmode="decimal" value="0" oninput="calcularCheckoutUI()" autofocus>
               <span class="pago-monto-moneda" id="pagoMontoMoneda">$</span>
             </div>
             <button class="btn-exacto" id="btnExacto" style="display:none" onclick="ponerExacto()">EXACTO</button>
@@ -228,6 +233,17 @@
       </div>
     </div>
 
+    <!-- VIEW: Estadísticas -->
+    <div id="view-estadisticas" class="view">
+      <div class="est-container">
+        <h2>Estadísticas</h2>
+        <div class="est-controls">
+          <button class="btn-guardar" onclick="cargarEstadisticas()">Refrescar</button>
+        </div>
+        <div id="estadisticasBody" class="est-body"></div>
+      </div>
+    </div>
+
     <!-- VIEW: Cierre -->
     <div id="view-cierre" class="view">
       <div class="cierre-container">
@@ -235,6 +251,7 @@
         <div class="cierre-fecha">
           <input type="date" id="cierreFecha" onchange="cargarCierre()">
         </div>
+        <div id="cierreStatus" class="config-status" style="margin-bottom:10px;"></div>
         <div class="cierre-grid" id="cierreGrid">
           <div class="cierre-card">
             <div class="cierre-label">Total Ventas USD</div>
@@ -269,6 +286,7 @@
             <div class="cierre-valor" id="cierreTotalBs">Bs. 0.00</div>
           </div>
         </div>
+        <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()">Cerrar Día</button>
       </div>
     </div>
   </div>
@@ -278,6 +296,7 @@
   <script src="js/views/caja.js"></script>
   <script src="js/views/config.js"></script>
   <script src="js/views/cierre.js"></script>
+  <script src="js/views/estadisticas.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

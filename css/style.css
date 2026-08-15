@@ -17,8 +17,12 @@
   --blue: #2563eb;
   --blue-bg: #dbeafe;
   --yellow: #ca8a04;
+  --success: #16a34a;
+  --danger: #dc2626;
   --font: 'SF Pro Display', 'San Francisco', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'Consolas', 'Courier New', monospace;
+  --font-mono: var(--font);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -30,6 +34,8 @@ body {
   color: var(--text);
   user-select: none;
   font-size: 13px;
+  touch-action: manipulation;
+  overscroll-behavior: none;
 }
 
 #app {
@@ -182,6 +188,7 @@ body {
   gap: 10px;
   padding: 10px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   flex: 1;
   align-content: start;
 }
@@ -220,9 +227,24 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
+  padding: 8px 14px 10px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
+  cursor: pointer;
+  position: relative;
+}
+
+.ticket-handle {
+  display: none;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 0 auto 6px;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .ticket-header h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
@@ -654,13 +676,252 @@ body {
 .cierre-label { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
 .cierre-valor { font-size: 18px; font-weight: 700; font-family: var(--font-mono); }
 
-/* RESPONSIVE */
+.btn-cerrar-dia {
+  width: 100%; margin-top: 14px; padding: 14px;
+  border: none; background: var(--red); color: #fff;
+  font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px;
+}
+.btn-cerrar-dia:active { background: #b91c1c; }
+.btn-cerrar-dia:disabled { opacity: 0.4; }
+
+/* ESTADÍSTICAS */
+#view-estadisticas { overflow-y: auto; display: none; }
+#view-estadisticas.active { display: flex; }
+
+.est-container {
+  width: 100%; max-width: 600px; margin: 0 auto;
+  padding: 20px 16px;
+}
+.est-container h2 { margin-bottom: 14px; font-size: 16px; color: var(--text-muted); }
+
+.est-controls { margin-bottom: 14px; }
+
+.est-body { display: flex; flex-direction: column; gap: 8px; }
+
+.est-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+
+.est-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.est-item-fecha {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.est-item-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--green);
+  font-family: var(--font-mono);
+}
+
+.est-item-detalles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+
+.est-item-totales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+/* ============== RESPONSIVE MOBILE ============== */
 @media (max-width: 768px) {
-  .pos-layout { flex-direction: column; }
-  .pos-right { width: 100%; max-height: 45vh; border-left: none; border-top: 1px solid var(--border); }
-  .productos-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; padding: 8px; }
-  .producto-btn { padding: 12px 6px; min-height: 75px; }
-  .producto-nombre { font-size: 12px; }
-  .producto-precio { font-size: 14px; }
-  .cierre-grid { grid-template-columns: 1fr 1fr; }
+  html, body { overflow: hidden; height: 100%; }
+  #app { height: 100dvh; }
+  #topnav { height: 40px; padding: 0 4px; }
+  .nav-title { font-size: 11px; letter-spacing: .5px; }
+  .nav-icon-btn { width: 36px; height: 36px; }
+
+  /* POS layout: products fill, ticket is bottom drawer */
+  .pos-layout { flex-direction: column; position: relative; }
+  .pos-left { flex: 1; min-height: 0; }
+  .pos-right {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: max-height .25s ease;
+    max-height: 50vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  }
+
+  /* Collapsed: only header + totals + cobrar visible */
+  .pos-right.collapsed {
+    max-height: 165px;
+  }
+
+  .pos-right.collapsed .ticket-items {
+    max-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  /* Show ticket handle on mobile */
+  .ticket-handle { display: block; }
+
+  /* Ticket header: mobile compact */
+  .ticket-header {
+    padding: 16px 14px 8px;
+    min-height: 38px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .ticket-header h3 { font-size: 11px; }
+  .item-count { min-width: 22px; height: 22px; font-size: 11px; }
+
+  /* Ticket items: scrollable area with transition */
+  .ticket-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+    transition: max-height .25s ease, opacity .2s ease, padding .2s ease;
+    max-height: 25vh;
+    min-height: 0;
+  }
+
+  .ticket-item { padding: 6px 4px; }
+  .ticket-item-nombre { font-size: 12px; }
+  .ticket-item-precio { font-size: 10px; }
+  .ticket-item-cantidad span { font-size: 13px; }
+  .ticket-item-subtotal { font-size: 11px; min-width: 50px; }
+
+  .ticket-totales {
+    padding: 8px 14px;
+    flex-shrink: 0;
+  }
+  .total-line { font-size: 12px; padding: 3px 0; }
+  .total-efectivo { font-size: 14px; }
+
+  .btn-cobrar {
+    padding: 14px;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  /* Product grid: more compact */
+  .productos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    gap: 6px;
+    padding: 6px;
+  }
+  .producto-btn { padding: 10px 4px; min-height: 70px; }
+  .producto-nombre { font-size: 11px; margin-top: 2px; }
+  .producto-precio { font-size: 13px; }
+  .producto-precio-bs { font-size: 11px; }
+  .producto-fkey { font-size: 8px; padding: 1px 4px; top: 2px; right: 2px; }
+  .producto-stock { font-size: 8px; }
+
+  .categoria-tabs { padding: 6px; gap: 3px; }
+  .categoria-tab { padding: 8px 12px; font-size: 12px; }
+
+  /* ===== MODALS FULL-SCREEN ON MOBILE ===== */
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+    background: rgba(0,0,0,0.6);
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 92vh;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 20px calc(20px + var(--safe-bottom));
+    width: 100%;
+    animation: slideUp .2s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-close {
+    top: 14px; right: 14px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    font-size: 18px;
+  }
+
+  /* Quantity modal: centered still (override flex-end) */
+  #modalCantidad { align-items: center; }
+  .modal-cantidad { max-width: 300px; border-radius: 12px; }
+  .modal-cantidad h2 { font-size: 16px; margin-bottom: 16px; }
+  .cant-btn { width: 44px; height: 44px; }
+  .cant-input { width: 90px; height: 44px; font-size: 22px; }
+
+  /* Checkout modal: full-width bottom sheet */
+  .checkout-modal h2 { font-size: 14px; margin-bottom: 12px; }
+
+  .pago-metodos { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pago-metodo-btn { padding: 14px 6px; font-size: 11px; }
+
+  .pago-monto-label { font-size: 12px; }
+  .pago-monto-moneda { font-size: 18px; }
+  .pago-input { font-size: 20px; padding: 10px 12px; }
+
+  .btn-procesar { padding: 14px; font-size: 15px; }
+  .btn-cancelar-pago { padding: 14px; font-size: 12px; }
+  .btn-exacto { padding: 12px; font-size: 13px; }
+
+  .checkout-estado { padding: 8px; }
+  .checkout-resumen { padding: 8px; }
+  .resumen-line { font-size: 11px; }
+
+  /* Config view */
+  .config-container { padding: 14px 12px; }
+  .config-card { padding: 12px; }
+  .config-input { font-size: 16px; padding: 8px 10px; }
+
+  .prod-item { padding: 4px; }
+  .prod-item-nombre { font-size: 11px; }
+  .prod-item-precio { font-size: 11px; }
+
+  /* Cierre view */
+  .cierre-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cierre-container { padding: 14px 12px; }
+  .cierre-card { padding: 10px; }
+  .cierre-valor { font-size: 16px; }
+
+  /* Menu dropdown */
+  .menu-dropdown { top: 40px; min-width: 160px; }
+  .menu-dropdown-item { padding: 12px 14px; font-size: 12px; }
+
+  /* Estadísticas */
+  .est-container { padding: 14px 12px; }
+  .est-item { padding: 10px; }
+  .est-item-header { font-size: 12px; }
+  .est-item-total { font-size: 14px; }
+  .est-item-detalles, .est-item-totales { font-size: 10px; gap: 6px; }
+
+  /* Cerrar día */
+  .btn-cerrar-dia { padding: 12px; font-size: 14px; margin-top: 12px; }
 }

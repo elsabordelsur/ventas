@@ -44,64 +44,41 @@ function calcularCheckout(totalUsd, tasaBcv, tasaVuelto, pagos) {
 
   const digital = pagoPagoMovil + pagoPunto
 
-  let saldoBs = totalBsExacto
+  const remanenteOwedBs = Math.max(0, totalBsExacto - pagoUsd * tasaBcv - digital)
 
-  if (pagoUsd > 0) {
-    saldoBs -= pagoUsd * tasaBcv
-  }
-
-  if (digital > 0) {
-    saldoBs -= digital
-  }
-
-  const remanenteBsEfectivo = Math.max(0, saldoBs)
-  const aplicaRedondeo = pagoBs > 0 || (remanenteBsEfectivo > 0 && pagoUsd > 0 && pagoBs === 0)
-
-  let montoCobradoBsExacto = 0
-  let montoCobradoBsEfectivo = 0
+  const pagarEnBsEfectivo = pagoBs > 0 || (remanenteOwedBs > 0 && pagoUsd > 0)
   let ajusteRedondeo = 0
+  let montoCobradoBs = remanenteOwedBs
 
-  if (aplicaRedondeo && remanenteBsEfectivo > 0) {
-    montoCobradoBsEfectivo = techo50(remanenteBsEfectivo)
-    ajusteRedondeo = calcularAjusteRedondeo(montoCobradoBsEfectivo, remanenteBsEfectivo)
-  } else {
-    montoCobradoBsExacto = remanenteBsEfectivo
+  if (pagarEnBsEfectivo && remanenteOwedBs > 0) {
+    montoCobradoBs = techo50(remanenteOwedBs)
+    ajusteRedondeo = calcularAjusteRedondeo(montoCobradoBs, remanenteOwedBs)
   }
 
-  const totalACobrarBs = (pagoUsd * tasaBcv) + digital + montoCobradoBsExacto + montoCobradoBsEfectivo
   const totalPagadoBs = (pagoUsd * tasaBcv) + digital + pagoBs
-
-  let faltante = +(totalACobrarBs - totalPagadoBs).toFixed(2)
-  let excedente = +(totalPagadoBs - totalACobrarBs).toFixed(2)
+  const totalEsperadoBs = (pagoUsd * tasaBcv) + digital + montoCobradoBs
 
   let vueltoBs = 0
   let vueltoBilletes = []
 
-  if (excedente > 0 && pagoUsd > 0) {
-    let vueltoTeoricoBs = excedente
-
-    if (tasaVuelto && tasaVuelto > 0) {
-      const vueltoUsd = excedente / tasaBcv
-      vueltoTeoricoBs = vueltoUsd * tasaVuelto
-    }
-
-    vueltoBs = piso50(vueltoTeoricoBs)
+  if (pagoUsd > 0 && pagoUsd > totalUsd) {
+    const excedenteUsd = pagoUsd - totalUsd
+    const tv = (tasaVuelto && tasaVuelto > 0) ? tasaVuelto : tasaBcv
+    vueltoBs = Math.min(piso50(excedenteUsd * tv), totalPagadoBs)
     vueltoBilletes = desglosarBilletes(vueltoBs)
-    faltante = 0
   }
 
-  if (faltante < 0) faltante = 0
-
-  const totalBsCobrado = (pagoUsd * tasaBcv) + digital + pagoBs - vueltoBs
+  const faltante = +Math.max(0, totalEsperadoBs - totalPagadoBs).toFixed(2)
+  const totalBsCobrado = +(totalPagadoBs - vueltoBs).toFixed(2)
 
   return {
     totalBsExacto,
     totalBsEfectivo,
-    faltante: +faltante.toFixed(2),
+    faltante,
     vueltoBs: +vueltoBs.toFixed(2),
     vueltoBilletes,
     ajusteRedondeo,
-    totalBsCobrado: +totalBsCobrado.toFixed(2),
+    totalBsCobrado,
     puedeProcesar: faltante <= 0
   }
 }

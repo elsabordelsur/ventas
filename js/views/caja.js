@@ -23,12 +23,12 @@ async function cargarProductos() {
 }
 
 document.addEventListener('keydown', e => {
-  const fkey = `F${e.key.replace('F', '')}`
-  if (!fkey.startsWith('F') || isNaN(+fkey.slice(1))) return
-  const fNum = +fkey.slice(1)
+  const match = e.code.match(/^F(\d+)$/)
+  if (!match) return
+  const fNum = +match[1]
   if (fNum < 1 || fNum > 12) return
   e.preventDefault()
-  const prod = productos.find(p => p.tecla_rapida === fkey)
+  const prod = productos.find(p => p.tecla_rapida === `F${fNum}`)
   if (prod) abrirModalCantidad(prod.id, prod.nombre.replace(/'/g, "\\'"), prod.precio_usd)
 })
 
@@ -84,8 +84,11 @@ function renderTicket() {
   if (ticket.length === 0) {
     container.innerHTML = '<div class="ticket-empty">Agrega productos al ticket</div>'
     actualizarTotales()
+    if (window.innerWidth <= 768) document.getElementById('posRight').classList.add('collapsed')
     return
   }
+
+  if (window.innerWidth <= 768) document.getElementById('posRight').classList.remove('collapsed')
 
   container.innerHTML = ticket.map((t, i) =>
     `<div class="ticket-item">
@@ -115,6 +118,11 @@ function cambiarCantidad(index, delta) {
 function eliminarDelTicket(index) {
   ticket.splice(index, 1)
   renderTicket()
+}
+
+function toggleTicket() {
+  if (window.innerWidth > 768) return
+  document.getElementById('posRight').classList.toggle('collapsed')
 }
 
 function actualizarTotales() {
@@ -166,8 +174,6 @@ function seleccionarMetodo(metodo) {
   document.getElementById('pagoMontoLabel').textContent = label
   document.getElementById('pagoMontoMoneda').textContent = moneda
   const input = document.getElementById('pagoMontoInput')
-  input.step = step
-  input.min = '0'
   input.value = valorInicial
   document.getElementById('checkBilletes').innerHTML = ''
 

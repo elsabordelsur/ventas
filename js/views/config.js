@@ -3,10 +3,11 @@ let categoriasAdmin = []
 async function cargarConfig() {
   const { data } = await supabase.from('configuracion').select('*').eq('id', 1).single()
   if (data) {
+    const tasaVuelto = data.tasa_vuelto || data.tasa_bcv || 0
     document.getElementById('tasaBcvInput').value = data.tasa_bcv
-    document.getElementById('tasaVueltoInput').value = data.tasa_vuelto
+    document.getElementById('tasaVueltoInput').value = tasaVuelto
     tasaBcvActual = data.tasa_bcv
-    tasaVueltoActual = data.tasa_vuelto
+    tasaVueltoActual = tasaVuelto
   }
   await cargarCategoriasSelect()
   await cargarCategoriasAdmin()

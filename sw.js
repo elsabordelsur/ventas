@@ -1,5 +1,17 @@
-const CACHE_NAME = 'esds-cache-v3'
-const ASSETS = ['/', '/index.html', '/css/style.css', '/manifest.json']
+const CACHE_NAME = 'esds-cache-v5'
+const ASSETS = [
+  './',
+  './index.html',
+  './css/style.css',
+  './manifest.json',
+  './js/supabaseClient.js',
+  './js/pricingEngine.js',
+  './js/views/caja.js',
+  './js/views/config.js',
+  './js/views/cierre.js',
+  './js/views/estadisticas.js',
+  './js/app.js'
+]
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)))
@@ -15,11 +27,32 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('.js') || e.request.url.includes('supabase')) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)))
+  const req = e.request
+  if (req.method !== 'GET') return
+
+  const url = new URL(req.url)
+
+  if (url.origin !== location.origin) {
+    e.respondWith(fetch(req).catch(() => caches.match(req)))
     return
   }
+
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone()
+        caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy))
+        return res
+      }).catch(() => caches.match('./index.html'))
+    )
+    return
+  }
+
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.match(req).then(r => r || fetch(req).then(res => {
+      const copy = res.clone()
+      caches.open(CACHE_NAME).then(cache => cache.put(req, copy))
+      return res
+    }))
   )
 })

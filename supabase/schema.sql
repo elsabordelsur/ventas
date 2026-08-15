@@ -7,6 +7,7 @@
 CREATE TABLE IF NOT EXISTS configuracion (
   id BIGINT PRIMARY KEY DEFAULT 1,
   tasa_bcv NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  tasa_vuelto NUMERIC(12, 2) NOT NULL DEFAULT 0,
   fecha_actualizacion TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT unique_fila CHECK (id = 1)
@@ -60,6 +61,21 @@ CREATE TABLE IF NOT EXISTS venta_detalles (
   subtotal_usd NUMERIC(12, 2) NOT NULL
 );
 
+-- 6. TABLA: cierres (histórico de cierres diarios)
+CREATE TABLE IF NOT EXISTS cierres (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  fecha DATE NOT NULL UNIQUE,
+  total_ventas_usd NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  efectivo_usd NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  efectivo_bs NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  pagomovil NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  punto NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  vueltos_bs NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  ajuste_redondeo_bs NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  total_bs_cobrado NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================
 -- POLÍTICAS RLS (Row Level Security)
 -- ============================================
@@ -69,6 +85,7 @@ ALTER TABLE categorias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ventas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE venta_detalles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cierres ENABLE ROW LEVEL SECURITY;
 
 -- Políticas: permitir todo al rol anon (para POS público)
 -- En producción, deberías restringir más estas políticas
@@ -85,6 +102,9 @@ CREATE POLICY "Acceso público ventas" ON ventas
   FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Acceso público venta_detalles" ON venta_detalles
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Acceso público cierres" ON cierres
   FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================

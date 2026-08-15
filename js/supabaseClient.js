@@ -25,7 +25,11 @@ function SBQ(table) {
       if (q._single) return { data: r.data?.[0] || null, error: r.error }
       return r
     }
-    if (q._method === 'POST') return sbFetch(table, { method: 'POST', body: JSON.stringify(q._body), headers: q._headers })
+    if (q._method === 'POST') {
+      const r = await sbFetch(table, { method: 'POST', body: JSON.stringify(q._body), headers: q._headers })
+      if (q._single) return { data: (Array.isArray(r.data) ? r.data[0] : r.data) || null, error: r.error }
+      return r
+    }
     const f = q._filters.join('&')
     const p = f ? '?' + f : ''
     return sbFetch(table + p, { method: q._method, body: q._body ? JSON.stringify(q._body) : undefined, headers: q._headers })
@@ -37,6 +41,7 @@ function SBQ(table) {
   q.order = (c, o) => { q._order = encodeURIComponent(c) + (o?.ascending === false ? '.desc' : ''); return q }
   q.limit = (n) => { q._limit = n; return q }
   q.single = () => { q._single = true; return q }
+  q.maybeSingle = () => { q._single = true; return q }
   q.select = (c) => { q._cols = c; return q }
   return q
 }
