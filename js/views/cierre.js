@@ -45,32 +45,33 @@ async function cargarCierre() {
   if (!data || data.length === 0) {
     document.getElementById('cierreTotalUsd').textContent = '$0.00'
     document.getElementById('cierreEfectivoUsd').textContent = '$0.00'
-    document.getElementById('cierreEfectivoBs').textContent = 'Bs. 0.00'
-    document.getElementById('cierrePagoMovil').textContent = 'Bs. 0.00'
-    document.getElementById('cierrePunto').textContent = 'Bs. 0.00'
-    document.getElementById('cierreVueltos').textContent = 'Bs. 0.00'
-    document.getElementById('cierreRedondeo').textContent = 'Bs. 0.00'
-    document.getElementById('cierreTotalBs').textContent = 'Bs. 0.00'
+    document.getElementById('cierreEfectivoBs').textContent = 'Bs. 0,00'
+    document.getElementById('cierrePagoMovil').textContent = 'Bs. 0,00'
+    document.getElementById('cierrePunto').textContent = 'Bs. 0,00'
+    document.getElementById('cierreVueltos').textContent = 'Bs. 0,00'
+    document.getElementById('cierreRedondeo').textContent = 'Bs. 0,00'
+    document.getElementById('cierreTotalBs').textContent = 'Bs. 0,00'
     return
   }
 
-  const totalUsd = data.reduce((s, v) => s + +v.total_usd, 0)
-  const efectivoUsd = data.reduce((s, v) => s + +v.pago_usd_efectivo, 0)
-  const efectivoBs = data.reduce((s, v) => s + +v.pago_bs_efectivo, 0)
-  const pagoMovil = data.reduce((s, v) => s + +v.pago_pagomovil, 0)
-  const punto = data.reduce((s, v) => s + +v.pago_punto, 0)
-  const vueltos = data.reduce((s, v) => s + +v.vuelto_bs_entregado, 0)
-  const redondeo = data.reduce((s, v) => s + +v.ajuste_redondeo_bs, 0)
-  const totalBs = data.reduce((s, v) => s + +v.total_bs_cobrado, 0)
+  const activas = data.filter(v => !v.anulada)
+  const totalUsd = activas.reduce((s, v) => s + +v.total_usd, 0)
+  const efectivoUsd = activas.reduce((s, v) => s + +v.pago_usd_efectivo, 0)
+  const efectivoBs = activas.reduce((s, v) => s + +v.pago_bs_efectivo, 0)
+  const pagoMovil = activas.reduce((s, v) => s + +v.pago_pagomovil, 0)
+  const punto = activas.reduce((s, v) => s + +v.pago_punto, 0)
+  const vueltos = activas.reduce((s, v) => s + +v.vuelto_bs_entregado, 0)
+  const redondeo = activas.reduce((s, v) => s + +v.ajuste_redondeo_bs, 0)
+  const totalBs = activas.reduce((s, v) => s + +v.total_bs_cobrado, 0)
 
   document.getElementById('cierreTotalUsd').textContent = `$${totalUsd.toFixed(2)}`
   document.getElementById('cierreEfectivoUsd').textContent = `$${efectivoUsd.toFixed(2)}`
-  document.getElementById('cierreEfectivoBs').textContent = `Bs. ${efectivoBs.toFixed(2)}`
-  document.getElementById('cierrePagoMovil').textContent = `Bs. ${pagoMovil.toFixed(2)}`
-  document.getElementById('cierrePunto').textContent = `Bs. ${punto.toFixed(2)}`
-  document.getElementById('cierreVueltos').textContent = `Bs. ${vueltos.toFixed(2)}`
-  document.getElementById('cierreRedondeo').textContent = `Bs. ${redondeo.toFixed(2)}`
-  document.getElementById('cierreTotalBs').textContent = `Bs. ${totalBs.toFixed(2)}`
+  document.getElementById('cierreEfectivoBs').textContent = `Bs. ${fmtBs(efectivoBs)}`
+  document.getElementById('cierrePagoMovil').textContent = `Bs. ${fmtBs(pagoMovil)}`
+  document.getElementById('cierrePunto').textContent = `Bs. ${fmtBs(punto)}`
+  document.getElementById('cierreVueltos').textContent = `Bs. ${fmtBs(vueltos)}`
+  document.getElementById('cierreRedondeo').textContent = `Bs. ${fmtBs(redondeo)}`
+  document.getElementById('cierreTotalBs').textContent = `Bs. ${fmtBs(totalBs)}`
 }
 
 async function cerrarDia() {
@@ -106,14 +107,15 @@ async function cerrarDia() {
     return
   }
 
-  const totalUsd = ventas.reduce((s, v) => s + +v.total_usd, 0)
-  const efectivoUsd = ventas.reduce((s, v) => s + +v.pago_usd_efectivo, 0)
-  const efectivoBs = ventas.reduce((s, v) => s + +v.pago_bs_efectivo, 0)
-  const pagoMovil = ventas.reduce((s, v) => s + +v.pago_pagomovil, 0)
-  const punto = ventas.reduce((s, v) => s + +v.pago_punto, 0)
-  const vueltos = ventas.reduce((s, v) => s + +v.vuelto_bs_entregado, 0)
-  const redondeo = ventas.reduce((s, v) => s + +v.ajuste_redondeo_bs, 0)
-  const totalBs = ventas.reduce((s, v) => s + +v.total_bs_cobrado, 0)
+  const activas = ventas.filter(v => !v.anulada)
+  const totalUsd = activas.reduce((s, v) => s + +v.total_usd, 0)
+  const efectivoUsd = activas.reduce((s, v) => s + +v.pago_usd_efectivo, 0)
+  const efectivoBs = activas.reduce((s, v) => s + +v.pago_bs_efectivo, 0)
+  const pagoMovil = activas.reduce((s, v) => s + +v.pago_pagomovil, 0)
+  const punto = activas.reduce((s, v) => s + +v.pago_punto, 0)
+  const vueltos = activas.reduce((s, v) => s + +v.vuelto_bs_entregado, 0)
+  const redondeo = activas.reduce((s, v) => s + +v.ajuste_redondeo_bs, 0)
+  const totalBs = activas.reduce((s, v) => s + +v.total_bs_cobrado, 0)
 
   const { error } = await supabase.from('cierres').insert({
     fecha,
@@ -141,5 +143,5 @@ async function cerrarDia() {
   btn.textContent = '✓ Día Cerrado'
   document.getElementById('cierreStatus').textContent = '✓ Día cerrado exitosamente'
   document.getElementById('cierreStatus').style.color = 'var(--green)'
-  alert('Día cerrado exitosamente')
+  await cargarCierre()
 }

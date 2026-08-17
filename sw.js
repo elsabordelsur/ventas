@@ -1,15 +1,23 @@
-const CACHE_NAME = 'esds-cache-v5'
+const CACHE_NAME = 'esds-cache-v17'
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
+  './css/tailwind.css',
   './manifest.json',
   './js/supabaseClient.js',
   './js/pricingEngine.js',
+  './js/modules/user.js',
+  './js/modules/theme.js',
+  './js/modules/alerts.js',
+  './js/modules/export.js',
+  './js/modules/sync.js',
   './js/views/caja.js',
   './js/views/config.js',
   './js/views/cierre.js',
+  './js/views/historial.js',
   './js/views/estadisticas.js',
+  './js/views/resumen.js',
   './js/app.js'
 ]
 

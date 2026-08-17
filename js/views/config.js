@@ -90,7 +90,7 @@ async function cargarCategoriasSelect() {
   const select = document.getElementById('prodCategoria')
   if (!data) return
   select.innerHTML = '<option value="">Seleccionar categoría</option>' +
-    data.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('')
+    data.map(c => `<option value="${c.id}">${escHtml(c.nombre)}</option>`).join('')
 }
 
 async function cargarCategoriasAdmin() {
@@ -104,7 +104,7 @@ async function cargarCategoriasAdmin() {
   container.innerHTML = data.map(c =>
     `<div class="prod-item${c.activa ? '' : ' inactivo'}">
       <div class="prod-item-info">
-        <div class="prod-item-nombre">${c.nombre}</div>
+        <div class="prod-item-nombre">${escHtml(c.nombre)}</div>
       </div>
       <button class="prod-item-accion editar" onclick="editarCategoria(${c.id})">✎</button>
       <button class="prod-item-accion eliminar" onclick="toggleCategoria(${c.id}, ${c.activa})">${c.activa ? 'Desactivar' : 'Activar'}</button>
@@ -170,8 +170,8 @@ async function cargarProductosAdmin() {
   container.innerHTML = data.map(p =>
     `<div class="prod-item${p.activo ? '' : ' inactivo'}">
       <div class="prod-item-info">
-        <div class="prod-item-nombre">${p.nombre} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds</span>` : ''} ${p.tecla_rapida ? `<span class="fkey-badge">${p.tecla_rapida}</span>` : ''}</div>
-        <div class="prod-item-categoria">${p.categorias?.nombre || 'Sin categoría'}</div>
+        <div class="prod-item-nombre">${escHtml(p.nombre)} ${p.maneja_inventario ? `<span class="stock-badge">Stock: ${p.stock} unds</span>` : ''} ${p.tecla_rapida ? `<span class="fkey-badge">${p.tecla_rapida}</span>` : ''}</div>
+        <div class="prod-item-categoria">${escHtml(p.categorias?.nombre || 'Sin categoría')}</div>
       </div>
       <div class="prod-item-precio">$${p.precio_usd.toFixed(2)}</div>
       <button class="prod-item-accion editar" onclick="editarProducto(${p.id})">${editSvg}</button>
@@ -192,6 +192,7 @@ function editarProducto(id) {
     document.getElementById('stockRow').style.display = data.maneja_inventario ? 'block' : 'none'
     document.getElementById('prodUndsCaja').value = data.unidades_por_caja || 1
     document.getElementById('prodTecla').value = data.tecla_rapida || ''
+    document.getElementById('prodStockMinimo').value = data.stock_minimo || 5
     document.getElementById('btnGuardarProducto').textContent = 'Actualizar'
     document.getElementById('btnCancelar').style.display = 'inline-block'
     document.getElementById('prodStatus').textContent = ''
@@ -208,6 +209,7 @@ function cancelarEdicion() {
   document.getElementById('stockRow').style.display = 'none'
   document.getElementById('prodUndsCaja').value = 1
   document.getElementById('prodTecla').value = ''
+  document.getElementById('prodStockMinimo').value = 5
   document.getElementById('btnGuardarProducto').textContent = 'Agregar'
   document.getElementById('btnCancelar').style.display = 'none'
   document.getElementById('prodStatus').textContent = ''
@@ -222,6 +224,7 @@ async function guardarProducto() {
   const maneja_inventario = document.getElementById('prodInventario').checked
   const unidades_por_caja = +document.getElementById('prodUndsCaja').value || 1
   const tecla_rapida = document.getElementById('prodTecla').value || null
+  const stock_minimo = +document.getElementById('prodStockMinimo').value || 5
 
   if (!categoria_id || !nombre || !precio_usd) {
     document.getElementById('prodStatus').textContent = 'Completa todos los campos'
@@ -233,11 +236,11 @@ async function guardarProducto() {
 
   if (id) {
     ({ error } = await supabase.from('productos').update({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, unidades_por_caja, tecla_rapida
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, unidades_por_caja, tecla_rapida, stock_minimo
     }).eq('id', id))
   } else {
     ({ error } = await supabase.from('productos').insert({
-      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock: 0, unidades_por_caja, tecla_rapida
+      categoria_id, nombre, precio_usd, activo, maneja_inventario, stock: 0, unidades_por_caja, tecla_rapida, stock_minimo
     }))
   }
 
@@ -274,7 +277,7 @@ async function cargarInventarioSelect() {
   const { data } = await supabase.from('productos').select('*').eq('maneja_inventario', true).order('nombre')
   const select = document.getElementById('invProducto')
   select.innerHTML = '<option value="">Seleccionar producto</option>' +
-    (data || []).map(p => `<option value="${p.id}">${p.nombre} (Stock: ${p.stock} unds)</option>`).join('')
+    (data || []).map(p => `<option value="${p.id}">${escHtml(p.nombre)} (Stock: ${p.stock} unds)</option>`).join('')
   document.getElementById('invInfo').style.display = 'none'
   document.getElementById('invStatus').textContent = ''
 }
@@ -285,7 +288,7 @@ function mostrarInfoInventario() {
   if (!id) { info.style.display = 'none'; return }
   supabase.from('productos').select('*').eq('id', id).single().then(({ data }) => {
     if (!data) return
-    info.innerHTML = `<strong>${data.nombre}</strong><br>
+    info.innerHTML = `<strong>${escHtml(data.nombre)}</strong><br>
       Stock actual: <strong>${data.stock} unidades</strong><br>
       Unds. por caja: ${data.unidades_por_caja}`
     info.style.display = 'block'

@@ -1,0 +1,32 @@
+@import "tailwindcss" source("../");
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --color-nav: #1a2744;
+  --color-nav-text: #8b9cb8;
+  --color-nav-active: #ffffff;
+  --color-page: #f4f5f7;
+  --color-card: #ffffff;
+  --color-card2: #f8f9fb;
+  --color-input: #ffffff;
+  --color-border: #e2e5ea;
+  --color-border-focus: #1a2744;
+  --color-txt: #1a1d23;
+  --color-txt2: #4a5060;
+  --color-txtmuted: #7c8290;
+  --color-txtdim: #a0a6b0;
+  --color-success: #22a55a;
+  --color-danger: #dc3545;
+  --color-info: #2563eb;
+  --color-warn: #d4a017;
+  --color-success-bg: #e8f8ee;
+  --color-danger-bg: #fde8ea;
+  --color-info-bg: #e8f0fe;
+  --color-warn-bg: #fef9e7;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}

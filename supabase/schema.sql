@@ -76,6 +76,38 @@ CREATE TABLE IF NOT EXISTS cierres (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 7. TABLA: pedidos (pedidos abiertos / en curso)
+CREATE TABLE IF NOT EXISTS pedidos (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  numero SERIAL,
+  cliente_nombre TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'abierto' CHECK (status IN ('abierto', 'pagado', 'cancelado')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  pagado_at TIMESTAMPTZ DEFAULT NULL,
+  total_usd NUMERIC(12, 2) DEFAULT 0,
+  tasa_bcv_aplicada NUMERIC(12, 2) DEFAULT 0,
+  total_bs_teorico NUMERIC(12, 2) DEFAULT 0,
+  total_bs_cobrado NUMERIC(12, 2) DEFAULT 0,
+  pago_usd_efectivo NUMERIC(12, 2) DEFAULT 0,
+  pago_bs_efectivo NUMERIC(12, 2) DEFAULT 0,
+  pago_pagomovil NUMERIC(12, 2) DEFAULT 0,
+  pago_punto NUMERIC(12, 2) DEFAULT 0,
+  pagomovil_confirmado BOOLEAN DEFAULT FALSE,
+  pagomovil_referencia TEXT DEFAULT '',
+  vuelto_bs_entregado NUMERIC(12, 2) DEFAULT 0,
+  ajuste_redondeo_bs NUMERIC(12, 2) DEFAULT 0
+);
+
+-- 8. TABLA: pedido_detalles (items del pedido activo)
+CREATE TABLE IF NOT EXISTS pedido_detalles (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  pedido_id BIGINT NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
+  producto_id BIGINT NOT NULL REFERENCES productos(id) ON DELETE RESTRICT,
+  cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+  precio_unitario_usd NUMERIC(10, 2) NOT NULL,
+  subtotal_usd NUMERIC(12, 2) NOT NULL
+);
+
 -- ============================================
 -- POLÍTICAS RLS (Row Level Security)
 -- ============================================
@@ -86,6 +118,8 @@ ALTER TABLE productos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ventas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE venta_detalles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cierres ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pedido_detalles ENABLE ROW LEVEL SECURITY;
 
 -- Políticas: permitir todo al rol anon (para POS público)
 -- En producción, deberías restringir más estas políticas
@@ -105,6 +139,12 @@ CREATE POLICY "Acceso público venta_detalles" ON venta_detalles
   FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Acceso público cierres" ON cierres
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Acceso público pedidos" ON pedidos
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Acceso público pedido_detalles" ON pedido_detalles
   FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================

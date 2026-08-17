@@ -2,3 +2,4 @@ env.txt
 .env
 *.xlsm
 ~$*
+node_modules/
