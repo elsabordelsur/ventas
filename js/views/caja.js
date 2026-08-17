@@ -1000,6 +1000,7 @@ function calcularCheckoutUI() {
     document.getElementById('checkBilletes').innerHTML = ''
   }
 
+  const btn = document.getElementById('btnProcesar')
   const hasPM = checkoutPagos.some(p => p.metodo === 'pagomovil')
   if (hasPM && !pagomovilConfirmado) {
     result.puedeProcesar = false
@@ -1010,7 +1011,6 @@ function calcularCheckoutUI() {
     btn.title = ''
   }
 
-  const btn = document.getElementById('btnProcesar')
   btn.disabled = !result.puedeProcesar
   btn.style.opacity = result.puedeProcesar ? '1' : '0.5'
 }
