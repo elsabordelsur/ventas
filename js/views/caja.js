@@ -818,6 +818,18 @@ function agregarMetodoDirecto(metodo) {
 
   if (metodo === 'pagomovil') {
     document.getElementById('pagomovilConfirmSection').style.display = 'block'
+    setTimeout(() => {
+      document.getElementById('pagomovilConfirmSection').scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
+
+  const pagosAfter = buildPagos()
+  const resultAfter = calcularCheckout(totalUsd, tasaBcvActual, tasaVueltoActual, pagosAfter)
+  if (resultAfter.faltante <= 0 && resultAfter.vueltoBs <= 0) {
+    setTimeout(() => {
+      const btn = document.getElementById('btnProcesar')
+      if (btn && !btn.disabled) btn.click()
+    }, 150)
   }
 }
 
@@ -991,6 +1003,11 @@ function calcularCheckoutUI() {
   const hasPM = checkoutPagos.some(p => p.metodo === 'pagomovil')
   if (hasPM && !pagomovilConfirmado) {
     result.puedeProcesar = false
+    btn.textContent = 'Confirma PagoMóvil'
+    btn.title = 'Debes confirmar la transferencia primero'
+  } else {
+    btn.textContent = 'CONFIRMAR'
+    btn.title = ''
   }
 
   const btn = document.getElementById('btnProcesar')
